@@ -264,6 +264,7 @@ if (!class_exists('Kernel\Upgrader'))
 					}
                 }
 
+                unlink($this->getKernel()->getCore()->getAbsoluteDirectory().'Kernel/Upgrader.php');
                 copy(
                     $this->getRemoteURI('Kernel/Upgrader.php'), 
                     $this->getKernel()->getCore()->getAbsoluteDirectory().'Kernel/Upgrader.php'
