@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: #PPM-Core V2
- * Version:     2.0.0
+ * Version:     1.0.0
  * Plugin URI:  http://osw3.net/wordpress/plugins/please-plug-me/
  * Description: This is the core of PPM Plugins. It must be activate to use all PPM Plugins.
  * Author:      OSW3
@@ -9,7 +9,7 @@
  * Text Domain: wp-ppm
  * Domain Path: /Languages/
  * License:     GPL v3
- * Repository:	https://github.com/OSW3/wp-please-plug-me/tree/develop
+ * Repository:	https://github.com/OSW3/wp-ppm-core
  */
 
 // Make sure we don't expose any info if called directly

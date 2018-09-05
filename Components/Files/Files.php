@@ -93,5 +93,38 @@ if (!class_exists('Components\Files\Files'))
 
             return $headers;
         }
+
+        /**
+         * Write File
+         */
+        public static function write(string $file, $data, string $type = 'text', bool $force = false)
+        {
+            if ((!file_exists($file) || $force === true) && is_writable(dirname($file)))
+            {
+                switch ($type) 
+                {
+                    case 'json':
+                        if (is_array($data) || !self::isJson($data))
+                        {
+                            $data = json_encode($data);
+                        }
+                        break;
+                }
+    
+                $fp = fopen($file, 'w');
+                fwrite($fp, $data);
+                fclose($fp);
+            }
+        }
+        public static function writeJson(string $file, $data, bool $force = false)
+        {
+            self::write($file, $data, 'json', $force);
+        }
+
+        public static function isJson($string) 
+        {
+            json_decode($string);
+            return (json_last_error() == JSON_ERROR_NONE);
+        }
     }
 }

@@ -15,6 +15,11 @@ if (!class_exists('Kernel\Mapper'))
     class Mapper
     {
         /**
+         * File Map
+         */
+        const FILE_MAP = "map.json";
+
+        /**
          * Base directory of the map
          * 
          * @param string
@@ -104,6 +109,25 @@ if (!class_exists('Kernel\Mapper'))
 			}
 
 			return $results;
-		}
+        }
+        
+        /**
+         * Sanitize map
+         * 
+         * Return an associative array 'md5' => 'relative'
+         */
+        public static function sanitize(array $map, array $type = ['directory', 'file'])
+        {
+            foreach ($map as $key => $item) 
+            {
+                if (in_array($item['type'], $type))
+                {
+                    $map[$item['md5']] = $item['relative'];
+                }
+                unset($map[$key]);
+            }
+
+            return $map;
+        }
     }
 }
