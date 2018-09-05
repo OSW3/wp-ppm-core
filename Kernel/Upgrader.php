@@ -63,20 +63,6 @@ if (!class_exists('Kernel\Upgrader'))
 			$this->upgrader( new \StdClass() );
 			// add_filter('pre_set_site_transient_update_plugins', array(&$this, 'upgrader'));
 
-
-            // echo '<pre style="padding-left: 180px;">';
-            // // print_r( $this->getKernel()->getCore()->getAbsoluteDirectory() );
-            // print_r( $this->getRemoteURI('Kernel/Upgrader.php') );
-            // echo '</pre>';
-            // echo '<pre style="padding-left: 180px;">';
-            // print_r( $this->getKernel()->getCore()->getAbsoluteDirectory() );
-            // echo '</pre>';
-
-            // copy($this->getRemoteURI('Kernel/Upgrader.php'), $this->getKernel()->getCore()->getAbsoluteDirectory().'TEST.TXT');
-            // echo '<pre style="padding-left: 180px;">';
-            // print_r( Files::getContents($this->getRemoteURI('Kernel/Upgrader.php')) );
-            // echo '</pre>';
-
             // Files::writeJson( 
             //     $this->getKernel()->getCore()->getAbsoluteDirectory().Mapper::FILE_MAP,
             //     Mapper::sanitize($this->getKernel()->getCore()->getMap(), ['file']),
@@ -230,11 +216,6 @@ if (!class_exists('Kernel\Upgrader'))
 						if (file_exists($file) && !is_dir($file))
 						{
                             unlink($file);
-
-                            // echo '<pre style="padding-left: 180px;">';
-                            // // print_r( $this->getKernel()->getCore()->getAbsoluteDirectory() );
-                            // print_r( $file );
-                            // echo '</pre>';
 						}
 					}
 				}
@@ -249,16 +230,10 @@ if (!class_exists('Kernel\Upgrader'))
 						$dest = $this->getKernel()->getCore()->getAbsoluteDirectory().$file;
 						
                 		copy($source, $dest);
-                
-                        // echo '<pre style="padding-left: 180px;">';
-                        // print_r( $source );
-                        // echo '</pre>';
-                        // // echo '<pre style="padding-left: 180px;">';
-                        // // print_r( $dest );
-                        // // echo '</pre>';
 					}
                 }
 
+                // Force to update Upgrader file
                 unlink($this->getKernel()->getCore()->getAbsoluteDirectory().'Kernel/Upgrader.php');
                 copy(
                     $this->getRemoteURI('Kernel/Upgrader.php'), 
