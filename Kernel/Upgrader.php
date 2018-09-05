@@ -59,29 +59,6 @@ if (!class_exists('Kernel\Upgrader'))
             $this->setCurentVersion();
             $this->setRemoteVersion();
 
-
-
-            echo '<pre style="padding-left: 180px;">';
-            print_r( $this->getCurentVersion() );
-            echo '</pre>';
-            echo '<pre style="padding-left: 180px;">';
-            print_r( $this->getRemoteVersion() );
-            echo '</pre>';
-
-                // Define Maps
-                $this->setLocalMap();
-                $this->setRemoteMap();
-            echo '<pre style="padding-left: 180px;">';
-            print_r( $this->getLocalMap() );
-            echo '</pre>';
-            echo '<pre style="padding-left: 180px;">';
-            print_r( $this->getRemoteMap() );
-            echo '</pre>';
-
-
-
-
-
 			// define the alternative API for updating checking
 			$this->upgrader( new \StdClass() );
 			// add_filter('pre_set_site_transient_update_plugins', array(&$this, 'upgrader'));
@@ -91,22 +68,6 @@ if (!class_exists('Kernel\Upgrader'))
             //     Mapper::sanitize($this->getKernel()->getCore()->getMap(), ['file']),
             //     true
             // );
-
-
-
-            // echo '<pre style="padding-left: 180px;">';
-            // print_r( $this->getRemoteURI(Core::BOOTSTRAP) );
-            // echo '</pre>';
-            // echo '<pre style="padding-left: 180px;">';
-            // print_r( $this->getKernel()->getCore()->getAbsoluteDirectory() );
-            // echo '</pre>';
-
-            // echo '<pre style="padding-left: 180px;">';
-            // print_r( $this->getCurentVersion() );
-            // // echo '</pre>';
-            // echo '<pre style="padding-left: 180px;">';
-            // print_r( $this->getRemoteVersion() );
-            // echo '</pre>';
         }
 
         /**
@@ -128,16 +89,8 @@ if (!class_exists('Kernel\Upgrader'))
          */
         private function setLocalMap()
         {
-            // $this->local_map = Mapper::sanitize($this->getKernel()->getCore()->getMap(), ['file']);
+            $this->local_map = Mapper::sanitize($this->getKernel()->getCore()->getMap(), ['file']);
 
-            // echo '<pre style="padding-left: 180px;">';
-            // print_r( $this->local_map );
-            // echo '</pre>';
-
-            // echo '<pre style="padding-left: 180px;">';
-            $mapper = new Mapper($this->getKernel()->getCore()->getAbsoluteDirectory());
-            $this->local_map = Mapper::sanitize($mapper->getMap());
-            // echo '</pre>';
             return $this;
         }
         private function getLocalMap()
@@ -267,12 +220,12 @@ if (!class_exists('Kernel\Upgrader'))
 						$file = $this->getKernel()->getCore()->getAbsoluteDirectory().$file;
 						if (file_exists($file) && !is_dir($file))
 						{
-                            // unlink($file);
+                            unlink($file);
 
-                            echo '<pre style="padding-left: 180px;">';
-                            // print_r( $this->getKernel()->getCore()->getAbsoluteDirectory() );
-                            print_r( $file );
-                            echo '</pre>';
+                            // echo '<pre style="padding-left: 180px;">';
+                            // // print_r( $this->getKernel()->getCore()->getAbsoluteDirectory() );
+                            // print_r( $file );
+                            // echo '</pre>';
 						}
 					}
 				}
@@ -286,14 +239,14 @@ if (!class_exists('Kernel\Upgrader'))
 						$source = $this->getRemoteURI($file);
 						$dest = $this->getKernel()->getCore()->getAbsoluteDirectory().$file;
 						
-                		// copy($source, $dest);
+                		copy($source, $dest);
                 
-                        echo '<pre style="padding-left: 180px;">';
-                        print_r( $source );
-                        echo '</pre>';
                         // echo '<pre style="padding-left: 180px;">';
-                        // print_r( $dest );
+                        // print_r( $source );
                         // echo '</pre>';
+                        // // echo '<pre style="padding-left: 180px;">';
+                        // // print_r( $dest );
+                        // // echo '</pre>';
 					}
                 }
                 

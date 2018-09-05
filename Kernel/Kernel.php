@@ -22,7 +22,8 @@ if (!class_exists('Kernel\Kernel'))
 		/**
 		 * List of file excluded from the update
 		 */
-        const CORE_UPGRADER_EXCLUSION = ['Kernel/Upgrader.php'];
+        // const CORE_UPGRADER_EXCLUSION = ['Kernel/Upgrader.php'];
+        const CORE_UPGRADER_EXCLUSION = [];
         
         /**
          * Insance of Config
