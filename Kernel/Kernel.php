@@ -19,6 +19,11 @@ if (!class_exists('Kernel\Kernel'))
 {
     abstract class Kernel
     {
+		/**
+		 * List of file excluded from the update
+		 */
+        const CORE_UPGRADER_EXCLUSION = ['Kernel/Upgrader.php'];
+        
         /**
          * Insance of Config
          */

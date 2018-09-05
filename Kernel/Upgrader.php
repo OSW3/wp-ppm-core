@@ -11,6 +11,7 @@ if (!defined('WPINC'))
 }
 
 use \Kernel\Core;
+use \Kernel\Kernel;
 use \Kernel\Mapper;
 use \Components\Files\Files;
 
@@ -120,8 +121,7 @@ if (!class_exists('Kernel\Upgrader'))
         {
             $remote_url = $this->getRemoteURI(Mapper::FILE_MAP);
             $remote_map = Files::getContents($remote_url);
-            $this->remote_map = $remote_map;
-            // $this->remote_map = $remote_url;
+            $this->remote_map = json_decode($remote_map, true);
 
             return $this;
         }
@@ -217,16 +217,61 @@ if (!class_exists('Kernel\Upgrader'))
         {
             if ($this->checkVersion())
             {
+                // Define Maps
                 $this->setLocalMap();
                 $this->setRemoteMap();
 
-                echo '<pre style="padding-left: 180px;">';
-                print_r( $this->getLocalMap() );
-                echo '</pre>';
+                // Check differences between both maps
+				// - Generate the remove list
+				$rm = array_diff_assoc($this->getLocalMap(), $this->getRemoteMap());
+				// - Generate the Download list
+                $dl = array_diff_assoc($this->getRemoteMap(), $this->getLocalMap());
+                
+				// Remove files ares not in remote repository
+				foreach ($rm as $file) 
+				{
+                    $file = preg_replace("@^".$this->getKernel()->getCore()->getRelativeDirectory()."@", null, $file);
+					if (!in_array($file, Kernel::CORE_UPGRADER_EXCLUSION))
+					{
+						$file = $this->getKernel()->getCore()->getAbsoluteDirectory().$file;
+						if (file_exists($file))
+						{
+                            // unlink($file);
 
-                echo '<pre style="padding-left: 180px;">';
-                print_r( $this->getRemoteMap() );
-                echo '</pre>';
+                            // echo '<pre style="padding-left: 180px;">';
+                            // // print_r( $this->getKernel()->getCore()->getAbsoluteDirectory() );
+                            // print_r( $file );
+                            // echo '</pre>';
+						}
+					}
+				}
+
+				// Copy files are not already in local
+				foreach ($dl as $file) 
+				{
+                    $file = preg_replace("@^".$this->getKernel()->getCore()->getRelativeDirectory()."@", null, $file);
+                    if (!in_array($file, Kernel::CORE_UPGRADER_EXCLUSION))
+                    {
+						$source = $this->getRemoteURI($file);
+						$dest = $this->getKernel()->getCore()->getAbsoluteDirectory().$file;
+						
+                		// copy($source, $dest);
+                
+                // echo '<pre style="padding-left: 180px;">';
+                // print_r( $source );
+                // echo '</pre>';
+                // echo '<pre style="padding-left: 180px;">';
+                // print_r( $dest );
+                // echo '</pre>';
+					}
+                }
+                
+                // Renew Local Map
+                Files::writeJson( 
+                    $this->getKernel()->getCore()->getAbsoluteDirectory().Mapper::FILE_MAP,
+                    Mapper::sanitize($this->getKernel()->getCore()->getMap(), ['file']),
+                    true
+                );
             }
         }
     }
