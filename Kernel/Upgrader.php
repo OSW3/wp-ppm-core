@@ -59,6 +59,29 @@ if (!class_exists('Kernel\Upgrader'))
             $this->setCurentVersion();
             $this->setRemoteVersion();
 
+
+
+            echo '<pre style="padding-left: 180px;">';
+            print_r( $this->getCurentVersion() );
+            echo '</pre>';
+            echo '<pre style="padding-left: 180px;">';
+            print_r( $this->getRemoteVersion() );
+            echo '</pre>';
+
+                // Define Maps
+                $this->setLocalMap();
+                $this->setRemoteMap();
+            echo '<pre style="padding-left: 180px;">';
+            print_r( $this->getLocalMap() );
+            echo '</pre>';
+            echo '<pre style="padding-left: 180px;">';
+            print_r( $this->getRemoteMap() );
+            echo '</pre>';
+
+
+
+
+
 			// define the alternative API for updating checking
 			$this->upgrader( new \StdClass() );
 			// add_filter('pre_set_site_transient_update_plugins', array(&$this, 'upgrader'));
@@ -105,15 +128,15 @@ if (!class_exists('Kernel\Upgrader'))
          */
         private function setLocalMap()
         {
-            $this->local_map = Mapper::sanitize($this->getKernel()->getCore()->getMap(), ['file']);
+            // $this->local_map = Mapper::sanitize($this->getKernel()->getCore()->getMap(), ['file']);
 
             // echo '<pre style="padding-left: 180px;">';
             // print_r( $this->local_map );
             // echo '</pre>';
 
             // echo '<pre style="padding-left: 180px;">';
-            // $mapper = new Mapper($this->getKernel()->getCore()->getAbsoluteDirectory());
-            // print_r( Mapper::sanitize($mapper->getMap()) );
+            $mapper = new Mapper($this->getKernel()->getCore()->getAbsoluteDirectory());
+            $this->local_map = Mapper::sanitize($mapper->getMap());
             // echo '</pre>';
             return $this;
         }
@@ -246,10 +269,10 @@ if (!class_exists('Kernel\Upgrader'))
 						{
                             // unlink($file);
 
-                            // echo '<pre style="padding-left: 180px;">';
-                            // // print_r( $this->getKernel()->getCore()->getAbsoluteDirectory() );
-                            // print_r( $file );
-                            // echo '</pre>';
+                            echo '<pre style="padding-left: 180px;">';
+                            // print_r( $this->getKernel()->getCore()->getAbsoluteDirectory() );
+                            print_r( $file );
+                            echo '</pre>';
 						}
 					}
 				}
@@ -265,12 +288,12 @@ if (!class_exists('Kernel\Upgrader'))
 						
                 		// copy($source, $dest);
                 
-                // echo '<pre style="padding-left: 180px;">';
-                // print_r( $source );
-                // echo '</pre>';
-                // echo '<pre style="padding-left: 180px;">';
-                // print_r( $dest );
-                // echo '</pre>';
+                        echo '<pre style="padding-left: 180px;">';
+                        print_r( $source );
+                        echo '</pre>';
+                        // echo '<pre style="padding-left: 180px;">';
+                        // print_r( $dest );
+                        // echo '</pre>';
 					}
                 }
                 

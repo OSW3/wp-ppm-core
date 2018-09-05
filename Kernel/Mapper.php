@@ -10,6 +10,8 @@ if (!defined('WPINC'))
 	exit;
 }
 
+use \Kernel\Kernel;
+
 if (!class_exists('Kernel\Mapper'))
 {
     class Mapper
@@ -77,34 +79,53 @@ if (!class_exists('Kernel\Mapper'))
 		private function scandir(string $target)
 		{
 			$results = [];
+            $excludes = array_merge(
+                Kernel::CORE_UPGRADER_EXCLUSION,
+                [self::FILE_MAP]
+            );
 
 			if (is_dir($target))
 			{
-				$files = glob( $target . '*', GLOB_MARK );
+                $files = glob( $target . '*', GLOB_MARK );
+                $exclusion = [];
 
-				foreach ($files as $file) 
+				foreach ($files as $abs_file) 
 				{
-					if (is_dir($file))
-					{
-                        $item = [
-                            'type' => 'directory',
-                            'md5' => md5_file($file),
-                            'absolute' => $file,
-                            'relative' => str_replace(WP_PLUGIN_DIR, "", $file),
-                        ];
-						array_push($results, $item);
-						$results = array_merge($results, $this->scandir( $file ));
-					}
-					else
-					{
-                        $item = [
-                            'type' => 'file',
-                            'md5' => md5_file($file),
-                            'absolute' => $file,
-                            'relative' => str_replace(WP_PLUGIN_DIR, "", $file),
-                        ];
-						array_push($results, $item);
-					}
+                    foreach ($excludes as $exclude) 
+                    {
+                        if (preg_match("@".$exclude."$@", $abs_file))
+                        {
+                            array_push($exclusion, $abs_file);
+                        }
+                    }
+                }
+
+				foreach ($files as $abs_file) 
+				{
+                    if (!in_array($abs_file, $exclusion))
+                    {
+                        if (is_dir($abs_file))
+                        {
+                            $item = [
+                                'type' => 'directory',
+                                'md5' => md5_file($abs_file),
+                                'absolute' => $abs_file,
+                                'relative' => str_replace(WP_PLUGIN_DIR, "", $abs_file),
+                            ];
+                            array_push($results, $item);
+                            $results = array_merge($results, $this->scandir( $abs_file ));
+                        }
+                        else
+                        {
+                            $item = [
+                                'type' => 'file',
+                                'md5' => md5_file($abs_file),
+                                'absolute' => $abs_file,
+                                'relative' => str_replace(WP_PLUGIN_DIR, "", $abs_file),
+                            ];
+                            array_push($results, $item);
+                        }
+                    }
 				}
 			}
 
