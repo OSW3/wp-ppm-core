@@ -51,13 +51,14 @@ if (!class_exists('Components\Files\Files'))
 
             if (filter_var($file, FILTER_VALIDATE_URL))
             {
-				$curl = curl_init();
-                curl_setopt($curl, CURLOPT_URL, $file);
-                curl_setopt($curl, CURLOPT_FRESH_CONNECT, TRUE);
-				curl_setopt($curl, CURLOPT_COOKIESESSION, TRUE);
-				curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
-				$content = curl_exec($curl);
-                curl_close($curl);
+				// $curl = curl_init();
+                // curl_setopt($curl, CURLOPT_URL, $file);
+                // curl_setopt($curl, CURLOPT_FRESH_CONNECT, TRUE);
+				// curl_setopt($curl, CURLOPT_COOKIESESSION, TRUE);
+				// curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
+				// $content = curl_exec($curl);
+                // curl_close($curl);
+                $content = file_get_contents($file);
             }
             else 
             {

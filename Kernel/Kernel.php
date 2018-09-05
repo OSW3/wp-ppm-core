@@ -51,7 +51,6 @@ if (!class_exists('Kernel\Kernel'))
 
             if (is_admin()) 
             {
-                // Start Upgrader
                 new Upgrader($this);
             }
 

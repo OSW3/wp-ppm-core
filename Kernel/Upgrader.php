@@ -59,10 +59,6 @@ if (!class_exists('Kernel\Upgrader'))
             $this->setCurentVersion();
             $this->setRemoteVersion();
 
-                // Define Maps
-                $this->setLocalMap();
-                $this->setRemoteMap();
-                
 			// define the alternative API for updating checking
 			$this->upgrader( new \StdClass() );
 			// add_filter('pre_set_site_transient_update_plugins', array(&$this, 'upgrader'));
@@ -196,7 +192,7 @@ if (!class_exists('Kernel\Upgrader'))
         }
 
 		/**
-		 * Update
+		 * Ckeck Versions
 		 */
         public function checkVersion()
         {
@@ -207,11 +203,6 @@ if (!class_exists('Kernel\Upgrader'))
             );
         }
 
-
-
-
-
-        
 		/**
 		 * Update
 		 */
@@ -219,9 +210,9 @@ if (!class_exists('Kernel\Upgrader'))
         {
             if ($this->checkVersion())
             {
-                // // Define Maps
-                // $this->setLocalMap();
-                // $this->setRemoteMap();
+                // Define Maps
+                $this->setLocalMap();
+                $this->setRemoteMap();
 
                 // Check differences between both maps
 				// - Generate the remove list
@@ -229,24 +220,6 @@ if (!class_exists('Kernel\Upgrader'))
 				// - Generate the Download list
                 $dl = array_diff_assoc($this->getRemoteMap(), $this->getLocalMap());
                 
-
-                echo '<pre style="padding-left: 180px;">';
-                print_r( "Have UPGRADE" );
-                echo '</pre>';
-
-                echo '<pre style="padding-left: 180px;">';
-                print_r( "From : ".$this->getCurentVersion() );
-                echo '</pre>';
-                echo '<pre style="padding-left: 180px;">';
-                print_r( "To : ".$this->getRemoteVersion() );
-                echo '</pre>';
-
-                echo '<pre style="padding-left: 180px;">';
-                print_r( $rm );
-                echo '</pre>';
-                echo '<pre style="padding-left: 180px;">';
-                print_r( $dl );
-                echo '</pre>';
 				// Remove files ares not in remote repository
 				foreach ($rm as $file) 
 				{
@@ -286,13 +259,12 @@ if (!class_exists('Kernel\Upgrader'))
 					}
                 }
 
-                // unlink($this->getKernel()->getCore()->getAbsoluteDirectory().'Kernel/Upgrader.php');
-                // copy(
-                //     $this->getRemoteURI('Kernel/Upgrader.php'), 
-                //     $this->getKernel()->getCore()->getAbsoluteDirectory().'Kernel/Upgrader.php'
-                // );
+                unlink($this->getKernel()->getCore()->getAbsoluteDirectory().'Kernel/Upgrader.php');
+                copy(
+                    $this->getRemoteURI('Kernel/Upgrader.php'), 
+                    $this->getKernel()->getCore()->getAbsoluteDirectory().'Kernel/Upgrader.php'
+                );
 
-                
                 // Renew Local Map
                 Files::writeJson( 
                     $this->getKernel()->getCore()->getAbsoluteDirectory().Mapper::FILE_MAP,
