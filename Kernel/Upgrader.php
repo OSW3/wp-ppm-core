@@ -107,6 +107,14 @@ if (!class_exists('Kernel\Upgrader'))
         {
             $this->local_map = Mapper::sanitize($this->getKernel()->getCore()->getMap(), ['file']);
 
+            // echo '<pre style="padding-left: 180px;">';
+            // print_r( $this->local_map );
+            // echo '</pre>';
+
+            // echo '<pre style="padding-left: 180px;">';
+            // $mapper = new Mapper($this->getKernel()->getCore()->getAbsoluteDirectory());
+            // print_r( Mapper::sanitize($mapper->getMap()) );
+            // echo '</pre>';
             return $this;
         }
         private function getLocalMap()
