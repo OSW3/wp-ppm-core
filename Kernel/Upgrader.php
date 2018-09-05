@@ -59,6 +59,10 @@ if (!class_exists('Kernel\Upgrader'))
             $this->setCurentVersion();
             $this->setRemoteVersion();
 
+                // Define Maps
+                $this->setLocalMap();
+                $this->setRemoteMap();
+                
 			// define the alternative API for updating checking
 			$this->upgrader( new \StdClass() );
 			// add_filter('pre_set_site_transient_update_plugins', array(&$this, 'upgrader'));
@@ -197,7 +201,7 @@ if (!class_exists('Kernel\Upgrader'))
         public function checkVersion()
         {
             return version_compare( 
-                $this->getCurentVersion(), 
+                $this->getCurentVersion(),
                 $this->getRemoteVersion(),
                 '<'
             );
@@ -215,9 +219,9 @@ if (!class_exists('Kernel\Upgrader'))
         {
             if ($this->checkVersion())
             {
-                // Define Maps
-                $this->setLocalMap();
-                $this->setRemoteMap();
+                // // Define Maps
+                // $this->setLocalMap();
+                // $this->setRemoteMap();
 
                 // Check differences between both maps
 				// - Generate the remove list
@@ -225,6 +229,24 @@ if (!class_exists('Kernel\Upgrader'))
 				// - Generate the Download list
                 $dl = array_diff_assoc($this->getRemoteMap(), $this->getLocalMap());
                 
+
+                echo '<pre style="padding-left: 180px;">';
+                print_r( "Have UPGRADE" );
+                echo '</pre>';
+
+                echo '<pre style="padding-left: 180px;">';
+                print_r( "From : ".$this->getCurentVersion() );
+                echo '</pre>';
+                echo '<pre style="padding-left: 180px;">';
+                print_r( "To : ".$this->getRemoteVersion() );
+                echo '</pre>';
+
+                echo '<pre style="padding-left: 180px;">';
+                print_r( $rm );
+                echo '</pre>';
+                echo '<pre style="padding-left: 180px;">';
+                print_r( $dl );
+                echo '</pre>';
 				// Remove files ares not in remote repository
 				foreach ($rm as $file) 
 				{
