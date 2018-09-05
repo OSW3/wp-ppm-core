@@ -220,7 +220,7 @@ if (!class_exists('Kernel\Upgrader'))
 						$file = $this->getKernel()->getCore()->getAbsoluteDirectory().$file;
 						if (file_exists($file) && !is_dir($file))
 						{
-                            unlink($file);
+                            // unlink($file);
 
                             // echo '<pre style="padding-left: 180px;">';
                             // // print_r( $this->getKernel()->getCore()->getAbsoluteDirectory() );
@@ -239,7 +239,7 @@ if (!class_exists('Kernel\Upgrader'))
 						$source = $this->getRemoteURI($file);
 						$dest = $this->getKernel()->getCore()->getAbsoluteDirectory().$file;
 						
-                		copy($source, $dest);
+                		// copy($source, $dest);
                 
                         // echo '<pre style="padding-left: 180px;">';
                         // print_r( $source );
