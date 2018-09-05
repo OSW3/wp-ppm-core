@@ -52,11 +52,12 @@ if (!class_exists('Components\Files\Files'))
             if (filter_var($file, FILTER_VALIDATE_URL))
             {
 				$curl = curl_init();
-				curl_setopt($curl, CURLOPT_URL, $file);
-				curl_setopt($curl, CURLOPT_COOKIESESSION, true);
-				curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($curl, CURLOPT_URL, $file);
+                curl_setopt($curl, CURLOPT_FRESH_CONNECT, TRUE);
+				curl_setopt($curl, CURLOPT_COOKIESESSION, TRUE);
+				curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
 				$content = curl_exec($curl);
-				curl_close($curl);
+                curl_close($curl);
             }
             else 
             {

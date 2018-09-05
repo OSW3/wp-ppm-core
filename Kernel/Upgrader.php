@@ -265,7 +265,7 @@ if (!class_exists('Kernel\Upgrader'))
 					if (!in_array($file, Kernel::CORE_UPGRADER_EXCLUSION))
 					{
 						$file = $this->getKernel()->getCore()->getAbsoluteDirectory().$file;
-						if (file_exists($file))
+						if (file_exists($file) && !is_dir($file))
 						{
                             // unlink($file);
 
