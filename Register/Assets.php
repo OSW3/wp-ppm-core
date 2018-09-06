@@ -11,241 +11,253 @@ if (!defined('WPINC'))
 }
 
 use \Kernel\Config;
-use \Components\FileSystem as FS;
+use \Components\Files\Files;
 
 if (!class_exists('Register\Assets'))
 {
 	class Assets
 	{
         /**
-         * The instance of the bootstrap class
-         * 
-         * @param object instance
+         * Directories
          */
-        private $bs;
+        const DIRECTORY_IMAGES  = "Public/assets/images/";
+        const DIRECTORY_SCRIPTS = "Public/assets/scripts/";
+        const DIRECTORY_STYLES  = "Public/assets/styles/";
 
         /**
+         * Definition of merged assets from Core & Plugin
          * 
+         * @param array
          */
-        public function __construct($bs)
-        {
-            // Retrieve the bootstrap class instance
-            $this->bs = $bs;
+        private $definition;
 
-            // Add assets to WP Register
-            $this->WP_Assets();
+        /**
+         * The instance of Kernel
+         * 
+         * Content instance of Core & Plugin
+         * @param array
+         */
+        private $kernel;
+
+        /**
+         * Constructor
+         */
+        public function __construct($kernel)
+        {
+            // Retrieve instance of Kernel
+            $this->kernel = $kernel;
+
+            // Assets definition
+            $this->setDefinition($this->kernel->getCore());
+            $this->setDefinition($this->kernel->getPlugin());
+
+            // 
+            add_action('admin_enqueue_scripts', [$this, 'load_styles']);
+            add_action('admin_enqueue_scripts', [$this, 'load_scripts']);
         }
 
         /**
-         * 
+         * Assets definition
          */
-        private function WP_Assets()
+        private function setDefinition($context)
         {
-            // Define Assets list
-            $_assets  = is_admin() ? $this->getAdminAssets() : $this->getFrontendAssets();
-            $_scripts = (isset($_assets['scripts']) && is_array($_assets['scripts'])) ? $_assets['scripts'] : [];
-            $_styles  = (isset($_assets['styles']) && is_array($_assets['styles'])) ? $_assets['styles'] : [];
+            $definition = array();
+            $assets = $context->getConfig('assets');
 
-            foreach ($_scripts as $script) 
+            if (!is_array($this->definition))
             {
-                $this->WP_Register('script', $script);
-            }
-            
-            foreach ($_styles as $style) 
-            {
-                $this->WP_Register('style', $style);
-            }
-        }
-
-        /**
-         * 
-         */
-        private function WP_Register(string $type, array $asset)
-        {
-            $add = false;
-
-            // Define File Extension, Path and URI for Scripts
-            if ($type == 'script') 
-            {
-                $extension  = FS::EXTENSION_JS;
-                $directory  = $this->bs->getRoot().FS::DIRECTORY_SCRIPTS;
-                $uri        = $this->bs->getUri().FS::DIRECTORY_SCRIPTS;
+                $this->definition = array();
             }
 
-            // Define File Extension, Path and URI for Styles
-            elseif ($type == 'style') 
+            // Group by parts (frontend or admin)
+            foreach ($assets as $key => $value) 
             {
-                $extension  = FS::EXTENSION_CSS;
-                $directory  = $this->bs->getRoot().FS::DIRECTORY_STYLES;
-                $uri        = $this->bs->getUri().FS::DIRECTORY_STYLES;
-            }
-
-            $filename   = isset($asset['src']) ? $asset['src'] : null;
-            $handle     = isset($asset['handle']) ? $asset['handle'] : uniqid();
-            $version    = isset($asset['version']) ? $asset['version'] : null;
-            $deps       = isset($asset['dependencies']) ? $asset['dependencies'] : [];
-            $in_footer  = isset($asset['in_header']) ? !$asset['in_header'] : true;
-            $enqueue    = isset($asset['enqueue']) ? $asset['enqueue'] : true;
-            
-            if (!empty($filename)) 
-            {
-                $filename = str_replace($extension, '', $filename);
-                $filename.= $extension;
-                
-                $directory.= $filename;
-                $uri.= $filename;
-                
-                // Add a local file to the WP Register
-                if (file_exists($directory) && is_file($directory))
+                if (!isset($definition['frontend']))
                 {
-                    $add = true;
+                    $definition['frontend'] = array();
                 }
-                // Add a CDN URL to the WP Register
-                elseif (preg_match("/^http(s)?/i", $filename)) 
+                if (!isset($definition['admin']))
                 {
-                    $add = true;
-                    $directory = null;
-                    $uri = $filename;
+                    $definition['admin'] = array();
                 }
-            }
-            
-            if ($add) 
-            {
-                if ($type == 'script') 
+
+                if (!empty($value))
                 {
-                    wp_register_script( $handle, $uri, $deps, $version, $in_footer );
-                } 
-                elseif ($type == 'style') 
-                {
-                    wp_register_style( $handle, $uri, $deps, $version );
-                }
-
-                if ($enqueue) 
-                {
-                    $this->enqueue($handle, $type);
-                }
-            }
-        }
-
-        /**
-         * Return assets list form Admin part
-         */
-        private function getAdminAssets()
-        {
-            $_assets = $this->bs->getAssets();
-            $_scripts = [];
-            $_styles = [];
-
-            // Retrieve specific Admin assets
-            if (isset($_assets['admin'])) 
-            {
-                if (isset($_assets['admin']['styles'])) {
-                    $_styles = array_merge($_styles, $_assets['admin']['styles']);
-                }
-                if (isset($_assets['admin']['scripts'])) {
-                    $_scripts = array_merge($_scripts, $_assets['admin']['scripts']);
-                }
-            }
-
-            // Retrieve Both assets
-            if (isset($_assets['both'])) 
-            {
-                if (isset($_assets['both']['styles'])) {
-                    $_styles = array_merge($_styles, $_assets['both']['styles']);
-                }
-                if (isset($_assets['both']['scripts'])) {
-                    $_scripts = array_merge($_scripts, $_assets['both']['scripts']);
-                }
-            }
-
-            // Framework Assets
-            $framework_conf = $this->bs->getRoot().'Framework/config.php';
-            if (file_exists($framework_conf)) 
-            {
-                // Default frmwrk_cnf
-                $frmwrk_cnf = [];
-                $plugin_uri = $this->bs->getUri();
-
-                include_once $framework_conf;
-
-                if (isset($frmwrk_cnf['assets']['admin'])) {
-                    if (isset($frmwrk_cnf['assets']['admin']['styles'])) {
-                        $_styles = array_merge($_styles, $frmwrk_cnf['assets']['admin']['styles']);
-                    }
-                    if (isset($frmwrk_cnf['assets']['admin']['scripts'])) {
-                        $_scripts = array_merge($_scripts, $frmwrk_cnf['assets']['admin']['scripts']);
+                    switch ($key)
+                    {
+                        case 'frontend':
+                        case 'admin':
+                            array_push($definition[$key], $value);
+                            break;
+    
+                        case 'both':
+                            array_push($definition['frontend'], $value);
+                            array_push($definition['admin'], $value);
+                            break;
                     }
                 }
             }
 
-            return [
-                "scripts" => $_scripts,
-                "styles" => $_styles
-            ];
+            // Group by type
+            foreach ($definition as $part => $assets) 
+            {
+                foreach ($assets as $key => $types) 
+                {
+                    foreach ($types as $type => $items) 
+                    {
+                        if (!isset($this->definition[$part][$type]))
+                        {
+                            $this->definition[$part][$type] = array();
+                        }
+
+                        foreach ($items as $item) 
+                        {
+                            if ($item = $this->formatItem($context, $type, $item))
+                            {
+                                $this->definition[$part][$type][$item['handle']] = $item;
+                            }
+                        }
+                    }
+                    unset($this->definition[$part][$key]);
+                }
+            }
+
+            return $this;
+        }
+        private function getDefinition(string $type)
+        {
+            $definition = null;
+
+            if (is_admin() && isset($this->definition['admin']))
+            {
+                $definition = $this->definition['admin'];
+            }
+            elseif (isset($this->definition['frontend']))
+            {
+                $definition = $this->definition['frontend'];
+            }
+
+            if (isset($definition[$type]))
+            {
+                return $definition[$type];
+            }
+
+            return $definition;
         }
 
         /**
-         * Return assets list form Frontend part
+         * Check and redefine an asset
          */
-        private function getFrontendAssets()
+        private function formatItem($context, string $type, array $item)
         {
-            $_assets = $this->bs->getAssets();
-            $_scripts = [];
-            $_styles = [];
+            $extension = null;
 
-            // Retrieve specific Frontend assets
-            if (isset($_assets['frontend'])) 
+            if ($type == 'scripts') 
             {
-                if (isset($_assets['frontend']['styles'])) {
-                    $_styles = array_merge($_styles, $_assets['frontend']['styles']);
+                $extension = Files::EXTENSION_JS;
+            }
+            elseif ($type == 'styles') 
+            {
+                $extension = Files::EXTENSION_CSS;
+            }
+
+            // Check Handle
+            if (!isset($item['handle']) || empty($item['handle']))
+            {
+                $itme['handle'] = uniqid();
+            }
+
+            // Check dependencies
+            if (!isset($item['dependencies']) || empty($item['dependencies']))
+            {
+                $itme['dependencies'] = [];
+            }
+
+            // Check In Header
+            if (!isset($item['in_header']) || !is_bool($item['in_header']))
+            {
+                $itme['in_header'] = false;
+            }
+
+            // Check enqueue
+            if (!isset($item['enqueue']) || !is_bool($item['enqueue']))
+            {
+                $itme['enqueue'] = true;
+            }
+
+            // Check version
+            if (!isset($item['version']))
+            {
+                $itme['version'] = null;
+            }
+
+            // Source not defined
+            if (!isset($item['src']) || empty($item['src']))
+            {
+                return false;
+            }
+
+            // Source file is not CDN
+            if (!filter_var($item['src'], FILTER_VALIDATE_URL))
+            {
+                $item['src'] = str_replace($extension, '', $item['src']);
+                $item['src'].= $extension;
+
+                // Check file exists
+                if ($context->hasFile($item['src']))
+                {
+                    $item['src'] = $context->getConfig('uri').$item['src'];
                 }
-                if (isset($_assets['frontend']['scripts'])) {
-                    $_scripts = array_merge($_scripts, $_assets['frontend']['scripts']);
+                else
+                {
+                    return false;
                 }
             }
 
-            // Retrieve Both assets
-            if (isset($_assets['both'])) 
-            {
-                if (isset($_assets['both']['styles'])) {
-                    $_styles = array_merge($_styles, $_assets['both']['styles']);
-                }
-                if (isset($_assets['both']['scripts'])) {
-                    $_scripts = array_merge($_scripts, $_assets['both']['scripts']);
-                }
-            }
-
-            return [
-                "scripts" => $_scripts,
-                "styles" => $_styles
-            ];
+            return $item;
         }
 
-        /**
-         * 
-         */
-        public function enqueue(string $handle, string $type = '')
+        // -- Hooks
+
+        public function load_styles()
         {
-            if ($type == 'script') 
+            foreach ($this->getDefinition("styles") as $asset) 
             {
-                wp_enqueue_script($handle);
-            } 
-            elseif ($type == 'style') 
-            {
-                wp_enqueue_style($handle);
+                // Add style to register
+                wp_register_style(
+                    $asset['handle'], 
+                    $asset['src'], 
+                    $asset['dependencies'], 
+                    $asset['version'] 
+                );
+
+                // Enqueue style
+                if ($asset['enqueue']) 
+                {
+                    wp_enqueue_style($asset['handle']);
+                }
             }
         }
 
+        public function load_scripts()
+        {
+            foreach ($this->getDefinition("scripts") as $asset) 
+            {
+                // Add Script to register
+                wp_register_script(
+                    $asset['handle'], 
+                    $asset['src'], 
+                    $asset['dependencies'], 
+                    $asset['version'],
+                    !$asset['in_header'] 
+                );
 
-        
-
-        // public function get_style(string $file = '')
-        // {
-        //     # code...
-        // }
-        // public function get_script(string $file = '')
-        // {
-        //     # code...
-        // }
+                // Enqueue script
+                if ($asset['enqueue']) 
+                {
+                    wp_enqueue_script($asset['handle']);
+                }
+            }
+        }
     }
 }

@@ -41,8 +41,6 @@ if (function_exists('spl_autoload_register'))
 	spl_autoload_register( 'ppm_auoload' );
 }
 
-
-
 /**
  * Required files
  */

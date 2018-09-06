@@ -13,7 +13,12 @@ if (!defined('WPINC'))
 // use \Kernel\Config;
 use \Kernel\Core;
 use \Kernel\Plugin;
-use \Kernel\Upgrader;
+use \Register\Assets;
+use \Register\Hooks;
+use \Register\Posts;
+use \Register\Settings;
+use \Register\Shortcodes;
+use \Register\Widgets;
 
 if (!class_exists('Kernel\Kernel'))
 {
@@ -23,17 +28,51 @@ if (!class_exists('Kernel\Kernel'))
 		 * List of file excluded from the update
 		 */
         const CORE_UPGRADER_EXCLUSION = ['Kernel/Upgrader.php'];
-        // const CORE_UPGRADER_EXCLUSION = [];
+        
+        /**
+         * Insance of Assets
+         */
+        // private $assets;
         
         /**
          * Insance of Config
          */
         private $core;
+        
+        /**
+         * Insance of Filters
+         */
+        private $filters;
+        
+        /**
+         * Insance of Hooks
+         */
+        private $hooks;
 
         /**
          * Insance of Plugin
          */
         private $plugin;
+
+        /**
+         * Insance of Posts
+         */
+        private $posts;
+
+        /**
+         * Insance of Settings
+         */
+        private $settings;
+
+        /**
+         * Insance of Shortcodes
+         */
+        private $shortcodes;
+
+        /**
+         * Insance of Widgets
+         */
+        private $widgets;
 
         /**
          * Constructor
@@ -42,26 +81,40 @@ if (!class_exists('Kernel\Kernel'))
         {
             // Core definition
             $this->setCore();
-            // $this->core = new Core();
 
             // Plugin Definition
             $this->setPlugin($file);
-            // $this->plugin = new Plugin($file);
-
-
-            if (is_admin()) 
-            {
-                new Upgrader($this);
-            }
-
-
-
 
             // echo '<pre style="padding-left: 180px;">';
-            // print_r( $this->core->getConfig() );
+            // print_r( $this->core->getConfig('uri') );
             // echo '</pre>';
+
             // echo '<pre style="padding-left: 180px;">';
             // print_r( $this->plugin->getConfig() );
+            // echo '</pre>';
+
+            // exit;
+
+
+            new Assets($this);
+            // $this->setFilters();
+            // $this->setHooks();
+            // $this->setPosts();
+            // $this->setSettings();
+            // $this->setShortcodes();
+            // $this->setWidgets();
+
+            // if (is_admin()) 
+            // {
+            //     new \Kernel\Upgrader($this);
+            // }
+
+
+
+
+            // echo '<pre style="padding-left: 180px;">';
+            // // print_r( $this->plugin->getConfig('name') );
+            // print_r( $this->plugin->getConfig('hooks') );
             // echo '</pre>';
 
             // // $this->config->updateConfig('name', 'truc');
@@ -95,6 +148,62 @@ if (!class_exists('Kernel\Kernel'))
         // --
 
         /**
+         * Assets
+         */
+        // private function setAssets()
+        // {
+        //     $this->assets = new Assets($this);
+
+        //     return $this;
+        // }
+        // public function getAssets()
+        // {
+        //     return $this->assets;
+        // }
+
+        /**
+         * The Core
+         */
+        private function setCore()
+        {
+            $this->core = new Core();
+
+            return $this;
+        }
+        public function getCore()
+        {
+            return $this->core;
+        }
+
+        /**
+         * Filters
+         */
+        private function setFilters()
+        {
+            $this->filters = new Filters();
+
+            return $this;
+        }
+        public function getFilters()
+        {
+            return $this->filters;
+        }
+
+        /**
+         * Hooks
+         */
+        private function setHooks()
+        {
+            $this->hooks = new Hooks();
+
+            return $this;
+        }
+        public function getHooks()
+        {
+            return $this->hooks;
+        }
+
+        /**
          * The Plugin
          */
         private function setPlugin(string $file = '')
@@ -109,17 +218,59 @@ if (!class_exists('Kernel\Kernel'))
         }
 
         /**
-         * The Config
+         * Posts
          */
-        private function setCore()
+        private function setPosts()
         {
-            $this->core = new Core();
+            $this->posts = new Posts();
 
             return $this;
         }
-        public function getCore()
+        public function getPosts()
         {
-            return $this->core;
+            return $this->posts;
+        }
+
+        /**
+         * Settings
+         */
+        private function setSettings()
+        {
+            $this->settings = new Settings();
+
+            return $this;
+        }
+        public function getSettings()
+        {
+            return $this->settings;
+        }
+
+        /**
+         * Shortcodes
+         */
+        private function setShortcodes()
+        {
+            $this->shortcodes = new Shortcodes();
+
+            return $this;
+        }
+        public function getShortcodes()
+        {
+            return $this->shortcodes;
+        }
+
+        /**
+         * Widgets
+         */
+        private function setWidgets()
+        {
+            $this->widgets = new Widgets;
+
+            return $this;
+        }
+        public function getWidgets()
+        {
+            return $this->widgets;
         }
 
 

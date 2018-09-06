@@ -20,12 +20,6 @@ if (!class_exists('Kernel\Upgrader'))
     class Upgrader
     {
         /**
-         * Repository Branch
-         */
-        // const BRANCH = "master";
-        const BRANCH = "alpha";
-
-        /**
          * The instance of Kernel
          * 
          * Content instance of Core & Plugin
@@ -51,7 +45,7 @@ if (!class_exists('Kernel\Upgrader'))
         public function __construct($kernel)
         {
             // Retrieve instance of Kernel
-            $this->setKernel($kernel);
+            $this->kernel = $kernel;
 
             // Define Remote Base
             $this->setRemoteURI();
@@ -64,24 +58,10 @@ if (!class_exists('Kernel\Upgrader'))
 			// add_filter('pre_set_site_transient_update_plugins', array(&$this, 'upgrader'));
 
             // Files::writeJson( 
-            //     $this->getKernel()->getCore()->getAbsoluteDirectory().Mapper::FILE_MAP,
-            //     Mapper::sanitize($this->getKernel()->getCore()->getMap(), ['file']),
+            //     $this->kernel->getCore()->getAbsoluteDirectory().Mapper::FILE_MAP,
+            //     Mapper::sanitize($this->kernel->getCore()->getMap(), ['file']),
             //     true
             // );
-        }
-
-        /**
-         * The Kernel
-         */
-        private function setKernel($kernel)
-        {
-            $this->kernel = $kernel;
-
-            return $this;
-        }
-        private function getKernel()
-        {
-            return $this->kernel;
         }
 
         /**
@@ -89,7 +69,7 @@ if (!class_exists('Kernel\Upgrader'))
          */
         private function setLocalMap()
         {
-            $this->local_map = Mapper::sanitize($this->getKernel()->getCore()->getMap(), ['file']);
+            $this->local_map = Mapper::sanitize($this->kernel->getCore()->getMap(), ['file']);
 
             return $this;
         }
@@ -119,7 +99,7 @@ if (!class_exists('Kernel\Upgrader'))
          */
         private function setCurentVersion()
         {
-            $this->curent_version = $this->getKernel()->getCore()->getConfig('version');
+            $this->curent_version = $this->kernel->getCore()->getConfig('version');
 
             return $this;
         }
@@ -133,7 +113,7 @@ if (!class_exists('Kernel\Upgrader'))
          */
         private function setRemoteURI()
         {
-            $base = $this->getKernel()->getCore()->getConfig('repository');
+            $base = $this->kernel->getCore()->getConfig('repository');
             $parse = parse_url($base);
 
             $re = [
@@ -141,7 +121,7 @@ if (!class_exists('Kernel\Upgrader'))
             ];
 
             $remoteURI = preg_replace("/".$re['host'][0]."/", $re['host'][1], $base);
-            $remoteURI.= self::BRANCH.DIRECTORY_SEPARATOR;
+            $remoteURI.= Core::REPOSITORY_MASTER.DIRECTORY_SEPARATOR;
 
             $this->remoteURI = $remoteURI;
 
@@ -164,7 +144,7 @@ if (!class_exists('Kernel\Upgrader'))
          */
         private function setRemoteVersion()
         {
-            $remote_url = $this->getRemoteURI(Core::BOOTSTRAP);
+            $remote_url = $this->getRemoteURI(Core::BOOTSTRAP_FILE);
 
             $data = Files::getData($remote_url, ['Version' => 'Version']);
 
@@ -209,10 +189,10 @@ if (!class_exists('Kernel\Upgrader'))
 				// Remove files ares not in remote repository
 				foreach ($rm as $file) 
 				{
-                    $file = preg_replace("@^".$this->getKernel()->getCore()->getRelativeDirectory()."@", null, $file);
+                    $file = preg_replace("@^".$this->kernel->getCore()->getRelativeDirectory()."@", null, $file);
 					if (!in_array($file, Kernel::CORE_UPGRADER_EXCLUSION))
 					{
-						$file = $this->getKernel()->getCore()->getAbsoluteDirectory().$file;
+						$file = $this->kernel->getCore()->getAbsoluteDirectory().$file;
 						if (file_exists($file) && !is_dir($file))
 						{
                             unlink($file);
@@ -223,27 +203,27 @@ if (!class_exists('Kernel\Upgrader'))
 				// Copy files are not already in local
 				foreach ($dl as $file) 
 				{
-                    $file = preg_replace("@^".$this->getKernel()->getCore()->getRelativeDirectory()."@", null, $file);
+                    $file = preg_replace("@^".$this->kernel->getCore()->getRelativeDirectory()."@", null, $file);
                     if (!in_array($file, Kernel::CORE_UPGRADER_EXCLUSION))
                     {
 						$source = $this->getRemoteURI($file);
-						$dest = $this->getKernel()->getCore()->getAbsoluteDirectory().$file;
+						$dest = $this->kernel->getCore()->getAbsoluteDirectory().$file;
 						
                 		copy($source, $dest);
 					}
                 }
 
                 // Force to update Upgrader file
-                unlink($this->getKernel()->getCore()->getAbsoluteDirectory().'Kernel/Upgrader.php');
+                unlink($this->kernel->getCore()->getAbsoluteDirectory().'Kernel/Upgrader.php');
                 copy(
                     $this->getRemoteURI('Kernel/Upgrader.php'), 
-                    $this->getKernel()->getCore()->getAbsoluteDirectory().'Kernel/Upgrader.php'
+                    $this->kernel->getCore()->getAbsoluteDirectory().'Kernel/Upgrader.php'
                 );
 
                 // Renew Local Map
                 Files::writeJson( 
-                    $this->getKernel()->getCore()->getAbsoluteDirectory().Mapper::FILE_MAP,
-                    Mapper::sanitize($this->getKernel()->getCore()->getMap(), ['file']),
+                    $this->kernel->getCore()->getAbsoluteDirectory().Mapper::FILE_MAP,
+                    Mapper::sanitize($this->kernel->getCore()->getMap(), ['file']),
                     true
                 );
             }

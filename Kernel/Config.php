@@ -10,242 +10,70 @@ if (!defined('WPINC'))
 	exit;
 }
 
+use \Kernel\Mapper;
+use \Components\Strings\Strings;
+
 if (!class_exists('Kernel\Config'))
 {
-    class Config 
+    abstract class Config 
     {
         /**
-         * Array of plugin assets
-         * 
-         * @param array
-         */
-        private $assets;
-
-        /**
-         * the plugin author name
-         * 
-         * @param string
-         */
-        private $author;
-
-        /**
-         * the plugin author HTML
-         * 
-         * @param string
-         */
-        private $authorHTML;
-
-        /**
-         * the plugin author URI
-         * 
-         * @param string
-         */
-        private $authorURI;
-
-        /**
-         * full config Definition both Bootstrap file and Config.php
+         * Config Array
          * 
          * @param array
          */
         private $config;
 
         /**
-         * The context of 'core' or 'plugin'
-         * 
-         * @param array
+         * Context definition
+         * this is the definition in the Bootstrap file
          */
-        private $context;
-
-        /**
-         * Plugin definition
-         * thisis the definition in the Bootstrap plugin file
-         */
-        private $bootstrapDefinition;
-        private $pluginDefinition;
-
-        /**
-         * the plugin description
-         * 
-         * @param string
-         */
-        private $description;
-
-        /**
-         * the plugin domain path
-         * 
-         * @param string
-         */
-        private $domainPath;
-
-        /**
-         * The execution environment
-         * 
-         * @param string
-         */
-        private $environment;
-
-        /**
-         * Array of plugin filters
-         * 
-         * @param array
-         */
-        private $filters;
-
-        /**
-         * Array of plugin hooks
-         * 
-         * @param array
-         */
-        private $hooks;
-
-        /**
-         * Array of plugin images sizes
-         * 
-         * @param array
-         */
-        private $images;
-
-        /**
-         * The instance of Core or Plugin
-         * 
-         * @param array
-         */
-        private $instance;
-
-        /**
-         * the plugin License
-         * 
-         * @param string
-         */
-        private $license;
-
-        /**
-         * The plugin name
-         * 
-         * @param string
-         */
-        private $name;
-
-        /**
-         * The plugin namespace
-         * 
-         * @param string
-         */
-        private $namespace;
-
-        /**
-         * the plugin network
-         * 
-         * @param string
-         */
-        private $network;
-
-        /**
-         * Array of plugin options
-         * 
-         * @param array
-         */
-        private $options;
-
-        /**
-         * Instance of Plugin
-         * 
-         * @param array
-         */
-        private $plugin;
-
-        /**
-         * the plugin uri
-         * 
-         * @param string
-         */
-        private $pluginURI;
-
-        /**
-         * Array of plugin posts
-         * 
-         * @param array
-         */
-        private $posts;
-
-        /**
-         * Repository address
-         * 
-         * @param array
-         */
-        private $repository;
-
-        /**
-         * Array of settings
-         * 
-         * @param array
-         */
-        private $settings;
-
-        /**
-         * Array of plugin shortcodes
-         * 
-         * @param array
-         */
-        private $shortcodes;
-
-        /**
-         * the plugin text-domain
-         * 
-         * @param string
-         */
-        private $textDomain;
-
-        /**
-         * the plugin title
-         * 
-         * @param string
-         */
-        private $title;
-
-        /**
-         * the plugin title html
-         * 
-         * @param string
-         */
-        private $titleHTML;
-
-        /**
-         * the version number of the plugin
-         * 
-         * @param string
-         */
-        private $version;
-
-        /**
-         * Array of plugin widgets
-         * 
-         * @param array
-         */
-        private $widgets;
+        private $definition;
 
         /**
          * Constructor
          */
-        public function __construct($instance, string $context = 'core')
+        final public function __construct(string $bootstrap = '')
         {
-            // Retrieve core or plugin instance
-            $this->setInstance($instance);
-
             // Define the context
-            $this->setContext($context);
+            $this->setContext();
 
-            // Retrive the Bootstrap Definition
-            $this->setBootstrapDefinition();
-            
-            // Retrieve Plugin Config Array
-            if ('plugin' == $this->getContext())
+            // Define the path of the Bootstrap file
+            $this->setBootstrap($bootstrap);
+
+            if ($this->isBootstrapValid())
             {
-                $this->setPluginDefinition();
-            }
+                $this->setDirectory();
+                $this->setURI();
+                $this->setMap();
+                $this->setDefinition();
 
-            // Set full configuration
-            $this->setConfig();
+                $this->setAssets();
+                $this->setAuthor();
+                $this->setAuthorHTML();
+                $this->setAuthorURI();
+                $this->setDescription();
+                $this->setEnvironment();
+                $this->setDomainPath();
+                $this->setFilters();
+                $this->setHooks();
+                $this->setImages();
+                $this->setLicense();
+                $this->setName();
+                $this->setNamespace();
+                $this->setNetwork();
+                $this->setOptions();
+                $this->setPluginURI();
+                $this->setPosts();
+                $this->setRepository();
+                $this->setSettings();
+                $this->setShortcodes();
+                $this->setTextDomain();
+                $this->setTitle();
+                $this->setTitleHTML();
+                $this->setVersion();
+                $this->setWidgets();
+            }
         }
 
         /**
@@ -253,17 +81,12 @@ if (!class_exists('Kernel\Config'))
          */
         public function setAssets()
         {
-            // TODO: Check assets validity
+            $assets = $this->getDefinition('assets');
+            $assets = is_array($assets) ? $assets : [];
 
-            $this->assets = $this->getPluginDefinition('assets');
-
-            $this->addConfig('assets', $this->assets);
+            $this->addConfig('assets', $assets);
 
             return $this;
-        }
-        public function getAssets()
-        {
-            return $this->assets;
         }
 
         /**
@@ -271,17 +94,12 @@ if (!class_exists('Kernel\Config'))
          */
         public function setAuthor()
         {
-            $author = $this->getBootstrapDefinition('Author');
+            $author = $this->getDefinition('Author');
+            $author = strip_tags($author);
 
-            $this->author = strip_tags($author);
-
-            $this->addConfig('author', $this->author);
+            $this->addConfig('author', $author);
 
             return $this;
-        }
-        public function getAuthor()
-        {
-            return $this->author;
         }
 
         /**
@@ -289,15 +107,11 @@ if (!class_exists('Kernel\Config'))
          */
         public function setAuthorHTML()
         {
-            $this->authorHTML = $this->getBootstrapDefinition('Author');
+            $authorHTML = $this->getDefinition('Author');
 
-            $this->addConfig('authorHTML', $this->authorHTML);
+            $this->addConfig('authorHTML', $authorHTML);
 
             return $this;
-        }
-        public function getAuthorHTML()
-        {
-            return $this->authorHTML;
         }
 
         /**
@@ -305,59 +119,51 @@ if (!class_exists('Kernel\Config'))
          */
         public function setAuthorURI()
         {
-            $this->authorURI = $this->getBootstrapDefinition('AuthorURI');
+            $authorURI = $this->getDefinition('AuthorURI');
 
-            $this->addConfig('authorURI', $this->authorURI);
+            $this->addConfig('authorURI', $authorURI);
 
             return $this;
         }
-        public function getAuthorURI()
+
+        /**
+         * Bootstrap
+         */
+        public function setBootstrap(string $bootstrap = '')
         {
-            return $this->authorURI;
+            $this->addConfig('bootstrap', $bootstrap);
+
+            return $this;
+        }
+        private function isBootstrapValid()
+        {
+            $bootstrap = $this->getConfig('bootstrap');
+
+            // Check is not empty string
+            if (empty($bootstrap))
+            {
+                return false;
+            }
+
+            // Check if file exist
+            if (!file_exists($bootstrap))
+            {
+                return false;
+            }
+
+            return true;
         }
 
         /**
          * Configuration
          */
-        private function setConfig()
-        {
-            $this->config = array();
-
-            // Set elements of configuration
-            $this->setAuthor();
-            $this->setAuthorHTML();
-            $this->setAuthorURI();
-            $this->setDescription();
-            $this->setDomainPath();
-            $this->setLicense();
-            $this->setName();
-            $this->setNetwork();
-            $this->setPluginURI();
-            $this->setRepository();
-            $this->setTextDomain();
-            $this->setTitle();
-            $this->setTitleHTML();
-            $this->setVersion();
-
-            if ('plugin' == $this->getContext())
-            {
-                $this->setAssets();
-                $this->setEnvironment();
-                $this->setFilters();
-                $this->setHooks();
-                $this->setImages();
-                $this->setNamespace();
-                $this->setOptions();
-                $this->setPosts();
-                $this->setSettings();
-                $this->setShortcodes();
-                $this->setWidgets();
-            }
-
-            return $this;
-        }
         public function addConfig(string $key, $data)
         {
+            if (!is_array($this->config))
+            {
+                $this->config = array();
+            }
+
             if (!isset($this->config[$key]))
             {
                 $this->config[$key] = $data;
@@ -387,66 +193,91 @@ if (!class_exists('Kernel\Config'))
             }
 
             ksort($this->config);
+
             return $this->config;
         }
 
         /**
          * Context
          */
-        public function setContext(string $context)
+        public function setContext()
         {
-            if (!in_array($context, ['core', 'plugin']))
+            // Retrieve the name of called class
+            $s_called_class = get_called_class();
+            $a_called_class = explode("\\", $s_called_class);
+            $class_name = end($a_called_class);
+            $class_name = strtolower($class_name);
+
+            // Default context
+            $context = 'core';
+
+            // Make sure the called class is an allowed context
+            if (in_array($class_name, ['core', 'plugin']))
             {
-                $context = 'core';
+                $context = $class_name;
             }
 
-            $this->context = $context;
+            // Set the context
+            $this->addConfig('context', $context);
 
             return $this;
-        }
-        public function getContext()
-        {
-            return $this->context;
         }
 
         /**
-         * Plugin definition
+         * Definition
          */
-        private function setBootstrapDefinition()
+        private function setDefinition()
         {
-            $this->bootstrapDefinition = array_merge(
-                get_plugin_data($this->getInstance()->getRootFile()),
-                get_file_data($this->getInstance()->getRootFile(), [
-                    'License' => 'License',
-                    'Repository' => 'Repository',
-                ], 'plugin' )
-            );
+            // Bootsrap Definition
+            $xtra_headers = [
+                'License' => 'License',
+                'Repository' => 'Repository',
+            ];
+
+            $base_data = get_plugin_data($this->getConfig('bootstrap'));
+            $xtra_data = get_file_data($this->getConfig('bootstrap'), $xtra_headers, 'plugin' );
+
+            $definition = array_merge($base_data, $xtra_data);
+
+            // Extra Config
+            if ($this->hasFile(static::CONFIG_FILENAME))
+            {
+                include_once $this->getConfig('directory').static::CONFIG_FILENAME;
+
+                if (isset($config) && is_array($config))
+                {
+                    $definition = array_merge($definition, $config);
+                }
+            }
+
+            // Set Definition
+            $this->definition = $definition;
 
             return $this;
         }
-        private function getBootstrapDefinition(string $key = '')
+        private function getDefinition(string $key = '')
         {
-            if (!empty($key) && isset($this->bootstrapDefinition[$key]))
+            if (!empty($key) && isset($this->definition[$key]))
             {
-                return $this->bootstrapDefinition[$key];
+                return $this->definition[$key];
             }
 
             return null;
         }
-        private function setPluginDefinition()
+
+        /**
+         * Context Directory
+         * 
+         * Define the directory of Core or Plugin
+         */
+        public function setDirectory()
         {
-            $this->pluginDefinition = $this->getInstance()->getConfig();
+            $directory = dirname($this->getConfig('bootstrap'));
+            $directory.= DIRECTORY_SEPARATOR;
+
+            $this->addConfig('directory', $directory);
 
             return $this;
-        }
-        private function getPluginDefinition(string $key = '')
-        {
-            if (!empty($key) && isset($this->pluginDefinition[$key]))
-            {
-                return $this->pluginDefinition[$key];
-            }
-
-            return null;
         }
 
         /**
@@ -454,15 +285,11 @@ if (!class_exists('Kernel\Config'))
          */
         public function setDomainpath()
         {
-            $this->domainPath = $this->getBootstrapDefinition('DomainPath');
+            $domainPath = $this->getDefinition('DomainPath');
 
-            $this->addConfig('domainPath', $this->domainPath);
+            $this->addConfig('domainPath', $domainPath);
 
             return $this;
-        }
-        public function getDomainPath()
-        {
-            return $this->domainPath;
         }
 
         /**
@@ -470,15 +297,11 @@ if (!class_exists('Kernel\Config'))
          */
         public function setDescription()
         {
-            $this->description = $this->getBootstrapDefinition('Description');
+            $description = $this->getDefinition('Description');
 
-            $this->addConfig('description', $this->description);
+            $this->addConfig('description', $description);
 
             return $this;
-        }
-        public function getDescription()
-        {
-            return $this->description;
         }
 
         /**
@@ -486,33 +309,29 @@ if (!class_exists('Kernel\Config'))
          */
         public function setEnvironment()
         {
-            $environment = $this->getPluginDefinition('environment');
+            $environment = $this->getDefinition('environment');
 
             switch ($environment)
             {
                 case 'production':
                 case 'development':
-                    $this->environment = $environment;
+                    $environment = $environment;
                     break;
                 
                 case 'auto':
                 default: 
                     if (preg_match("/(127\.0\.Ø\.1|localhost|\.local$)/i", $_SERVER['SERVER_NAME'])) 
                     {
-                        $this->environment = 'development';
+                        $environment = 'development';
                     }
                     else {
-                        $this->environment = 'production';
+                        $environment = 'production';
                     }
             }
 
-            $this->addConfig('environment', $this->environment);
+            $this->addConfig('environment', $environment);
             
             return $this;
-        }
-        public function getEnvironment()
-        {
-            return $this->environment;
         }
 
         /**
@@ -520,23 +339,12 @@ if (!class_exists('Kernel\Config'))
          */
         public function setFilters()
         {
-            $this->filters = array();
-            
-            $filters = $this->getPluginDefinition('filters');
+            $filters = $this->getDefinition('filters');
+            $filters = is_array($filters) ? $filters : [];
 
-            if (is_array($filters))
-            {
-                // TODO: Check if valid filter (array declaration have file)
-                $this->filters = array_merge($this->filters, $filters);
-            }
-
-            $this->addConfig('filters', $this->filters);
+            $this->addConfig('filters', $filters);
 
             return $this;
-        }
-        public function getFilters()
-        {
-            return $this->filters;
         }
 
         /**
@@ -544,23 +352,12 @@ if (!class_exists('Kernel\Config'))
          */
         public function setHooks()
         {
-            $this->hooks = array();
-            
-            $hooks = $this->getPluginDefinition('hooks');
+            $hooks = $this->getDefinition('hooks');
+            $hooks = is_array($hooks) ? $hooks : [];
 
-            if (is_array($hooks))
-            {
-                // TODO: Check if valid hook (array declaration have file)
-                $this->hooks = array_merge($this->hooks, $hooks);
-            }
-
-            $this->addConfig('hooks', $this->hooks);
+            $this->addConfig('hooks', $hooks);
 
             return $this;
-        }
-        public function getHooks()
-        {
-            return $this->hooks;
         }
 
         /**
@@ -568,37 +365,12 @@ if (!class_exists('Kernel\Config'))
          */
         public function setImages()
         {
-            $this->images = array();
-            
-            $images = $this->getPluginDefinition('images');
+            $images = $this->getDefinition('images');
+            $images = is_array($images) ? $images : [];
 
-            if (is_array($images))
-            {
-                // TODO: Check if valid image filter
-                $this->images = array_merge($this->images, $images);
-            }
-
-            $this->addConfig('images', $this->images);
+            $this->addConfig('images', $images);
 
             return $this;
-        }
-        public function getImages()
-        {
-            return $this->images;
-        }
-
-        /**
-         * The Instance
-         */
-        private function setInstance($instance = null)
-        {
-            $this->instance = $instance;
-
-            return $this;
-        }
-        private function getInstance()
-        {
-            return $this->instance;
         }
 
         /**
@@ -606,31 +378,36 @@ if (!class_exists('Kernel\Config'))
          */
         public function setLicense()
         {
-            $this->license = $this->getBootstrapDefinition('License');
+            $license = $this->getDefinition('License');
 
-            $this->addConfig('license', $this->license);
+            $this->addConfig('license', $license);
 
             return $this;
-        }
-        public function getLicense()
-        {
-            return $this->license;
         }
 
         /**
-         * Plugin Name
+         * Map
          */
-        public function setName()
+        private function setMap()
         {
-            $this->name = $this->getBootstrapDefinition('Name');
+            $mapper = new Mapper($this->getConfig('directory'));
+            $map = $mapper->getMap();
 
-            $this->addConfig('name', $this->name);
+            $this->addConfig('map', $map);
 
             return $this;
         }
-        public function getName()
+
+        /**
+         *  Name
+         */
+        public function setName()
         {
-            return $this->name;
+            $name = $this->getDefinition('Name');
+
+            $this->addConfig('name', $name);
+
+            return $this;
         }
 
         /**
@@ -638,26 +415,18 @@ if (!class_exists('Kernel\Config'))
          */
         public function setNamespace()
         {
-            $namespace = null;
-            
-            // Namespce from Config.php
-            $namespace = $this->getPluginDefinition('namespace');
+            $namespace = $this->getDefinition('namespace');
 
-            // Default Namespce from Name definition
             if (null == $namespace)
             {
-                $namespace = $this->getName();
+                $namespace = $this->getConfig('name');
             }
 
-            $this->namespace = \Components\Strings\Strings::slugify($namespace, "_");
+            $namespace = Strings::slugify($namespace, "_");
 
-            $this->addConfig('namespace', $this->namespace);
+            $this->addConfig('namespace', $namespace);
 
             return $this;
-        }
-        public function getNamespace()
-        {
-            return $this->namespace;
         }
 
         /**
@@ -665,39 +434,11 @@ if (!class_exists('Kernel\Config'))
          */
         public function setNetwork()
         {
-            $this->network = $this->getBootstrapDefinition('Network');
+            $network = $this->getDefinition('Network');
 
-            $this->addConfig('network', $this->network);
-
-            return $this;
-        }
-        public function getNetwork()
-        {
-            return $this->network;
-        }
-
-        /**
-         * Posts
-         */
-        public function setPosts($schema = null)
-        {
-            $this->posts = array();
-            
-            $posts = $this->getPluginDefinition('posts');
-
-            if (is_array($posts))
-            {
-                // TODO: Check if valid posts declaration
-                $this->posts = array_merge($this->posts, $posts);
-            }
-
-            $this->addConfig('posts', $this->posts);
+            $this->addConfig('network', $network);
 
             return $this;
-        }
-        public function getPosts()
-        {
-            return $this->posts;
         }
 
         /**
@@ -705,26 +446,16 @@ if (!class_exists('Kernel\Config'))
          */
         public function setOptions( $data = null )
         {
-            $this->options = array();
-
             // Retrieve options from Option parameter
-            $options = $this->getPluginDefinition('options');
-
-            if (is_array($options))
-            {
-                $this->options = array_merge($this->options, $options);
-            }
+            $options = $this->getDefinition('options');
+            $options = is_array($options) ? $options : [];
 
             // Retrieve options from Default values of Custom Post settings
             // TODO: Extract options from Post settings
 
-            $this->addConfig('options', $this->options);
+            $this->addConfig('options', $options);
 
             return $this;
-        }
-        public function getOptions()
-        {
-            return $this->options;
         }
 
         /**
@@ -732,34 +463,37 @@ if (!class_exists('Kernel\Config'))
          */
         public function setPluginURI()
         {
-            $this->pluginURI = $this->getBootstrapDefinition('PluginURI');
+            $pluginURI = $this->getDefinition('PluginURI');
 
-            $this->addConfig('pluginURI', $this->pluginURI);
+            $this->addConfig('pluginURI', $pluginURI);
 
             return $this;
         }
-        public function getPluginURI()
+
+        /**
+         * Posts
+         */
+        public function setPosts($schema = null)
         {
-            return $this->pluginURI;
+            $posts = $this->getDefinition('posts');
+            $posts = is_array($posts) ? $posts : [];
+
+            $this->addConfig('posts', $posts);
+
+            return $this;
         }
 
         /**
          * Repository
          */
-        public function setrepository()
+        public function setRepository()
         {
-            $repository = $this->getBootstrapDefinition('Repository');
-            $repository.= DIRECTORY_SEPARATOR;
+            $repository = $this->getDefinition('Repository');
+            $repository.= !empty($repository) ? DIRECTORY_SEPARATOR : null;
 
-            $this->repository = $repository;
-
-            $this->addConfig('repository', $this->repository);
+            $this->addConfig('repository', $repository);
 
             return $this;
-        }
-        public function getrepository()
-        {
-            return $this->repository;
         }
 
         /**
@@ -767,23 +501,12 @@ if (!class_exists('Kernel\Config'))
          */
         public function setSettings()
         {
-            $this->settings = array();
-            
-            $settings = $this->getPluginDefinition('settings');
+            $settings = $this->getDefinition('settings');
+            $settings = is_array($settings) ? $settings : [];
 
-            if (is_array($settings))
-            {
-                // TODO: Check if valid settings declaration
-                $this->settings = array_merge($this->settings, $settings);
-            }
-
-            $this->addConfig('settings', $this->settings);
+            $this->addConfig('settings', $settings);
 
             return $this;
-        }
-        public function getSettings()
-        {
-            return $this->settings;
         }
 
         /**
@@ -791,23 +514,12 @@ if (!class_exists('Kernel\Config'))
          */
         public function setShortcodes()
         {
-            $this->shortcodes = array();
-            
-            $shortcodes = $this->getPluginDefinition('shortcodes');
+            $shortcodes = $this->getDefinition('shortcodes');
+            $shortcodes = is_array($shortcodes) ? $shortcodes : [];
 
-            if (is_array($shortcodes))
-            {
-                // TODO: Check if valid shortcodes (array declaration have file)
-                $this->shortcodes = array_merge($this->shortcodes, $shortcodes);
-            }
-
-            $this->addConfig('shortcodes', $this->shortcodes);
+            $this->addConfig('shortcodes', $shortcodes);
 
             return $this;
-        }
-        public function getShortcodes()
-        {
-            return $this->shortcodes;
         }
 
         /**
@@ -815,65 +527,61 @@ if (!class_exists('Kernel\Config'))
          */
         public function setTextdomain()
         {
-            $this->textDomain = $this->getBootstrapDefinition('TextDomain');
+            $textDomain = $this->getDefinition('TextDomain');
 
-            $this->addConfig('textDomain', $this->textDomain);
+            $this->addConfig('textDomain', $textDomain);
 
             return $this;
         }
-        public function getTextDomain()
-        {
-            return $this->textdomain;
-        }
 
         /**
-         * Define the plugin Title
+         * Title
          */
         public function setTitle()
         {
-            $title = $this->getBootstrapDefinition('Title');
+            $title = $this->getDefinition('Title');
+            $title = strip_tags($title);
 
-            $this->title = strip_tags($title);
-
-            $this->addConfig('title', $this->title);
+            $this->addConfig('title', $title);
 
             return $this;
         }
-        public function getTitle()
-        {
-            return $this->title;
-        }
 
         /**
-         * Define the plugin Title HTML
+         * Title HTML
          */
         public function setTitleHTML()
         {
-            $this->titleHTML = $this->getBootstrapDefinition('Title');
+            $titleHTML = $this->getDefinition('Title');
 
-            $this->addConfig('titleHTML', $this->titleHTML);
+            $this->addConfig('titleHTML', $titleHTML);
 
             return $this;
-        }
-        public function getTitleHTML()
-        {
-            return $this->titlehtml;
         }
 
         /**
-         * Define the plugin version number
+         * Version
          */
         public function setVersion()
         {
-            $this->version = $this->getBootstrapDefinition('Version');
+            $version = $this->getDefinition('Version');
 
-            $this->addConfig('version', $this->version);
+            $this->addConfig('version', $version);
 
             return $this;
         }
-        public function getVersion()
+
+        /**
+         * URI
+         */
+        public function setURI()
         {
-            return $this->version;
+            $uri = $this->getConfig('directory');
+            $uri = preg_replace("@".WP_PLUGIN_DIR."@", WP_PLUGIN_URL, $uri);
+
+            $this->addConfig('uri', $uri);
+
+            return $this;
         }
 
         /**
@@ -881,23 +589,64 @@ if (!class_exists('Kernel\Config'))
          */
         public function setWidgets()
         {
-            $this->widgets = array();
-            
-            $widgets = $this->getPluginDefinition('widgets');
+            $widgets = $this->getDefinition('widgets');
+            $widgets = is_array($widgets) ? $widgets : [];
 
-            if (is_array($widgets))
-            {
-                // TODO: Check if valid widgets (array declaration have file)
-                $this->widgets = array_merge($this->widgets, $widgets);
-            }
-
-            $this->addConfig('widgets', $this->widgets);
+            $this->addConfig('widgets', $widgets);
 
             return $this;
         }
-        public function getWidgets()
+
+        // --
+
+        /**
+         * File Checking
+         * 
+         * @param string $file Relative path of file you want to search from the plugin root directory
+         */
+        public function hasFile(string $file = '')
         {
-            return $this->widgets;
+            $map = $this->getConfig('map');
+
+            if (!empty($file) && is_array($map))
+            {
+                $file = $this->getConfig('directory').$file;
+
+                foreach ($map as $item) 
+                {
+                    if ($item['type'] == 'file' && $item['absolute'] === $file && file_exists($file))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        /**
+         * Directory Checking
+         * 
+         * @param string $directory Relative path of directory you want to search from the plugin root directory
+         */
+        public function hasDirectory(string $directory = '')
+        {
+            if (!empty($directory) && is_array($this->getMap()))
+            {
+                $directory = preg_replace('/\/$/', '', $directory);
+                $directory.= DIRECTORY_SEPARATOR;
+                $directory = $this->getAbsoluteDirectory().$directory;
+
+                foreach ($this->getMap() as $item) 
+                {
+                    if ($item['type'] == 'directory' && $item['absolute'] === $directory && is_dir($directory))
+                    {
+                        return true;
+                    }
+                }
+            }
+            
+            return false;
         }
     }
 }

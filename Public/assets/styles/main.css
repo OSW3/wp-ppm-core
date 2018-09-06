@@ -1,0 +1,146 @@
+/* ****************************** *\
+ * Metaboxes
+\* ****************************** */
+
+.metabox-header {
+    border-bottom: 1px solid #eee;
+    margin: -6px -12px;
+    padding: 8px 12px;
+}
+.metabox-header p {
+    margin: 0;
+}
+
+
+
+
+/* ****************************** *\
+ * Choices
+\* ****************************** */
+
+.choices-expanded .choices-option {
+    display: block;
+    margin-bottom: 6px;
+}
+.choices-expanded.inline .choices-option {
+    display: inline;
+    margin-right: 18px;
+}
+
+
+
+
+/* ****************************** *\
+ * Autosize
+\* ****************************** */
+
+textarea.ppm-control.autosize {
+    height: auto;
+    transition: max-height 0.3s ease-out;
+    min-height: 64px;
+    max-height: 600px;
+}
+
+
+
+
+/* ****************************** *\
+ * Notice
+\* ****************************** */
+
+.ppm-notice.error ,
+.ppm-notice.notice-info ,
+.ppm-notice.updated ,
+.ppm-notice.update-nag {
+    display: block;
+    padding: 11px 15px;
+    line-height: 1.4em;
+    font-size: 13px;
+}
+
+.ppm-notice ul {
+    margin: 0;
+}
+
+
+
+
+/* ****************************** *\
+ * Controls states
+\* ****************************** */
+
+.ppm-control.has-error {
+    border: 1px solid #AA0000;
+    background-color: rgba(255, 0, 0, 0.1);
+}
+.ppm-description.has-error {
+    color: #AA0000;
+}
+
+
+
+
+/* ****************************** *\
+ * Collection
+\* ****************************** */
+
+
+.form-table td.ppm-collection-row {
+    padding-left: 0;
+    padding-right: 0;
+    padding-bottom: 0;
+}
+
+.ppm-collection-item-header {
+    position: relative;
+}
+.ppm-collection-item-header .button-link {
+    background-color: transparent;
+    color: #444444;
+    text-decoration: none;
+    /* float: right; */
+    position: absolute;
+    bottom: 0;
+    right: 0;
+}
+.ppm-collection-item-header .button-link:hover ,
+.ppm-collection-item-header .button-link.active ,
+.ppm-collection-item-header .button-link:active
+.ppm-collection-item-header .button-link.focus ,
+.ppm-collection-item-header .button-link:focus {
+    background-color: transparent;
+    color: #000000;
+    text-decoration: none;
+}
+
+
+.ppm-collection-container {
+    /* border: 1px solid #AA0000; */
+    margin-bottom: 1rem;
+}
+
+.ppm-collection-alert {
+    background-color: #fffdfd;
+    color: #a00;
+    padding: 1rem;
+}
+
+.ppm-collection-control {
+    border-top: 1px solid #e5e5e5;
+    text-align: right; 
+    padding-top: .5rem;
+}
+
+
+.ppm-collection-item+.ppm-collection-item {
+    margin-top: 1rem;
+}
+
+.ppm-collection-item-header {
+    border-bottom: 1px solid #e5e5e5;
+    /* padding: 8px 12px; */
+    padding: 8px 0;
+}
+.ppm-collection-item-header h4{
+    margin: 0;
+}
