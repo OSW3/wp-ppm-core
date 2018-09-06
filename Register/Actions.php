@@ -10,121 +10,71 @@ if (!defined('WPINC'))
 	exit;
 }
 
-use \Kernel\Config;
-use \Components\FileSystem as FS;
+use \Components\Utils\Files;
+use \Components\Utils\Misc;
 
 if (!class_exists('Register\Actions'))
 {
 	abstract class Actions
 	{
         /**
-         * The instance of the bootstrap class
+         * The instance of Kernel
          * 
-         * @param object instance
+         * Content instance of Core & Plugin
+         * @param array
          */
-        protected $bs;
+        private $kernel;
 
         /**
-         * Formated list of Hooks
+         * Path of directory how stored Actions
+         * 
+         * @param string
+         */
+        private $directory;
+
+        /**
+         * Definition of merged Actions from Core & Plugin
          * 
          * @param array
          */
-        private $actions = array();
-
-        /**
-         * List of types
-         */
-        protected $types = array();
+        private $definition;
 
         /**
          * 
          */
-        public function __construct($bs)
+        public function __construct($kernel)
         {
-            // Retrieve the bootstrap class instance
-            $this->bs = $bs;
+            // Retrieve instance of Kernel
+            $this->kernel = $kernel;
 
             // Define the type of the action
             $this->setType();
 
-            // Set custom Posts to $this->posts register
-            // $this->setPosts();
+            // Define the directory of the action
+            $this->setDirectory();
 
-            // Add Hooks to WP Register
-            $this->WP_Actions();
-        }
-        
-        /**
-         * Action Type
-         */
-        private function setType()
-        {
-            $class = get_called_class();
-            $class = explode("\\", $class);
-
-            $this->type = strtolower(end($class));
-            
-            return $this;
-        }
-        private function getType(Type $var = null)
-        {
-            return $this->type;
-        }
-
-        /**
-         * 
-         */
-        protected function WP_Actions()
-        {
-            // Define an empty array to store formated Actions
-            $_actions = array();
-
-            // Retrieve Actions definition in Config
-            $actions = $this->getActions();
-            $actions = null != $actions ? $actions : [];
-
-            // Define Actions directory
-            $directory = $this->bs->getRoot().$this->getDirectory();
-
-            // Define and format the list of Actions
-            foreach ($actions as $function => $trigger) 
-            {
-                // Define the File name
-                $filename = str_replace(FS::EXTENSION_PHP, '', $function);
-                $filename.= FS::EXTENSION_PHP;
-
-                // Define the filepath
-                $filepath = $directory.$filename;
-
-                if (file_exists($filepath) && is_file($filepath))
-                {
-                    $header     = $this->header($filepath);
-                    $priority   = isset($header['priority']) ? $this->priority($header['priority']) : 10;
-                    $args       = isset($header['params']) ? $this->args($header['params']) : 1;
-
-                    array_push($_actions, array_merge($header, [
-                        "trigger"   => $trigger,
-                        "function"  => $function,
-                        "filename"  => $filename,
-                        "filepath"  => $filepath,
-                        "priority"  => $priority,
-                        "params"    => $args,
-                    ]));
-                }
-            }
+            // Action definition
+            $this->setDefinition($this->kernel->getCore());
+            $this->setDefinition($this->kernel->getPlugin());
 
             // Add Actions to the register
-            foreach ($_actions as $action)
+            $this->load();
+        }
+
+        private function load()
+        {
+            foreach ($this->getDefinition() as $action) 
             {
                 // Include Action file
-                if (file_exists($action['filepath']) && is_file($action['filepath'])) {
+                if (file_exists($action['filepath']) && is_file($action['filepath'])) 
+                {
                     include_once $action['filepath'];
                 }
 
                 // Add Action to the register
-                if (function_exists($action['function'])) {
-                    
-                    switch ($this->type) 
+                if (function_exists($action['function'])) 
+                {
+                    switch ($this->getType())
                     {
                         case 'filters':
                             add_filter(
@@ -155,11 +105,99 @@ if (!class_exists('Register\Actions'))
         }
 
         /**
+         * Assets definition
+         */
+        private function setDefinition($context)
+        {
+            $type = $this->getType();
+            $actions = $context->getConfig($type);
+
+            if (!is_array($this->definition))
+            {
+                $this->definition = array();
+            }
+
+            foreach ($actions as $function => $trigger) 
+            {
+                // Define the Function Filename
+                $filename = str_replace(Files::EXTENSION_PHP, '', $function);
+                $filename.= Files::EXTENSION_PHP;
+
+                // Define the Function relative path (from $context)
+                $filename = $this->getDirectory($filename);
+
+                // Check if function file exists
+                if ($context->hasFile($filename))
+                {
+                    $filepath   = $context->getConfig('directory').$filename;
+                    $header     = $this->header( $filepath );
+                    $priority   = isset($header['priority']) ? $this->priority($header['priority']) : 10;
+                    $args       = isset($header['params']) ? $this->args($header['params']) : 1;
+
+                    array_push($this->definition, array_merge($header, [
+                        "trigger"   => $trigger,
+                        "function"  => $function,
+                        "filename"  => $filename,
+                        "filepath"  => $filepath,
+                        "priority"  => $priority,
+                        "params"    => $args,
+                    ]));
+                }
+            }
+
+            return $this;
+        }
+        private function getDefinition()
+        {
+            return $this->definition;
+        }
+
+        /**
+         * Action Directory
+         */
+        private function setDirectory()
+        {
+            $directory = $this->getType();
+            $directory.= DIRECTORY_SEPARATOR;
+
+            $this->directory = $directory;
+            
+            return $this;
+        }
+        private function getDirectory(string $file = '')
+        {
+            if (!empty($file))
+            {
+                return $this->directory.$file;
+            }
+
+            return $this->directory;
+        }
+        
+        /**
+         * Action Type
+         */
+        private function setType()
+        {
+            $type = Misc::get_called_class_name(get_called_class());
+            
+            $this->type = $type;
+            
+            return $this;
+        }
+        private function getType()
+        {
+            return $this->type;
+        }
+
+        // --
+
+        /**
          * 
          */
-        protected function header(string $file)
+        private function header(string $file)
         {
-            $header = get_file_data($file, $this->getHeaders());
+            $header = get_file_data($file, static::HEADERS);
 
             return $header;
         }
@@ -167,7 +205,7 @@ if (!class_exists('Register\Actions'))
         /**
          * 
          */
-        protected function priority(string $priority)
+        private function priority(string $priority)
         {
             $priority = !empty($priority) ? $priority : 10;
             $priority = is_int($priority) ? $priority : 10;
@@ -178,7 +216,7 @@ if (!class_exists('Register\Actions'))
         /**
          * 
          */
-        protected function args(string $args)
+        private function args(string $args)
         {
             $args = explode(";", $args);
 

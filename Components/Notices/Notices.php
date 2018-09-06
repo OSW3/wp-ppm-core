@@ -1,6 +1,6 @@
 <?php
 
-namespace Components;
+namespace Components\Notices;
 
 // Make sure we don't expose any info if called directly
 if (!defined('WPINC'))
@@ -12,7 +12,7 @@ if (!defined('WPINC'))
 
 use \Kernel\Session;
 
-if (!class_exists('Components\Notices'))
+if (!class_exists('Components\Notices\Notices'))
 {
 	class Notices
 	{

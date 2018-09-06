@@ -11,7 +11,7 @@ if (!defined('WPINC'))
 }
 
 use \Kernel\Config;
-use \Components\Files\Files;
+use \Components\Utils\Files;
 
 if (!class_exists('Register\Assets'))
 {
@@ -51,7 +51,7 @@ if (!class_exists('Register\Assets'))
             $this->setDefinition($this->kernel->getCore());
             $this->setDefinition($this->kernel->getPlugin());
 
-            // 
+            // Enqueue Assets
             add_action('admin_enqueue_scripts', [$this, 'load_styles']);
             add_action('admin_enqueue_scripts', [$this, 'load_scripts']);
         }

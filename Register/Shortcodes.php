@@ -10,36 +10,15 @@ if (!defined('WPINC'))
 	exit;
 }
 
-use \Kernel\Config;
-use \Register\Actions;
-use \Components\FileSystem as FS;
-
 if (!class_exists('Register\Shortcodes'))
 {
-	class Shortcodes extends Actions
+	class Shortcodes extends \Register\Actions
 	{
-        /**
-         * Retrieve list of shortcodes
-         */
-        public function getActions()
-        {
-            return $this->bs->getShortcodes();
-        }
 
         /**
-         * 
+         * The Function file Header
          */
-        public function getHeaders()
-        {
-            return [];
-        }
-
-        /**
-         * Define the Shortcodes directory
-         */
-        public function getDirectory()
-        {
-            return FS::DIRECTORY_SHORTCODES;
-        }
+        const HEADERS = [];
+        
     }
 }

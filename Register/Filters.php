@@ -10,39 +10,18 @@ if (!defined('WPINC'))
 	exit;
 }
 
-use \Kernel\Config;
-use \Register\Actions;
-use \Components\FileSystem as FS;
-
 if (!class_exists('Register\Filters'))
 {
-	class Filters extends Actions
+	class Filters extends \Register\Actions
 	{
-        /**
-         * Retrieve list of filters
-         */
-        public function getActions()
-        {
-            return $this->bs->getFilters();
-        }
 
         /**
-         * 
+         * The Function file Header
          */
-        public function getHeaders()
-        {
-            return [
-                'priority' => 'Priority',
-                'params' => 'Params',
-            ];
-        }
+        const HEADERS = [
+            'priority' => 'Priority',
+            'params' => 'Params',
+        ];
 
-        /**
-         * Define the Filters directory
-         */
-        public function getDirectory()
-        {
-            return FS::DIRECTORY_FILTERS;
-        }
     }
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace Components\Files;
+namespace Components\Utils;
 
 // Make sure we don't expose any info if called directly
 if (!defined('WPINC'))
@@ -10,7 +10,7 @@ if (!defined('WPINC'))
 	exit;
 }
 
-if (!class_exists('Components\Files\Files'))
+if (!class_exists('Components\Utils\Files'))
 {
     class Files
     {

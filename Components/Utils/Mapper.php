@@ -1,6 +1,6 @@
 <?php
 
-namespace Kernel;
+namespace Components\Utils;
 
 // Make sure we don't expose any info if called directly
 if (!defined('WPINC'))
@@ -12,7 +12,7 @@ if (!defined('WPINC'))
 
 use \Kernel\Kernel;
 
-if (!class_exists('Kernel\Mapper'))
+if (!class_exists('Components\Utils\Mapper'))
 {
     class Mapper
     {

@@ -10,8 +10,9 @@ if (!defined('WPINC'))
 	exit;
 }
 
-use \Kernel\Mapper;
-use \Components\Strings\Strings;
+use \Components\Utils\Mapper;
+use \Components\Utils\Misc;
+use \Components\Utils\Strings;
 
 if (!class_exists('Kernel\Config'))
 {
@@ -202,19 +203,12 @@ if (!class_exists('Kernel\Config'))
          */
         public function setContext()
         {
-            // Retrieve the name of called class
-            $s_called_class = get_called_class();
-            $a_called_class = explode("\\", $s_called_class);
-            $class_name = end($a_called_class);
-            $class_name = strtolower($class_name);
-
-            // Default context
-            $context = 'core';
+            $context = Misc::get_called_class_name(get_called_class());
 
             // Make sure the called class is an allowed context
-            if (in_array($class_name, ['core', 'plugin']))
+            if (!in_array($context, ['core', 'plugin']))
             {
-                $context = $class_name;
+                $context = 'core';
             }
 
             // Set the context

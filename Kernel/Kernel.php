@@ -10,15 +10,12 @@ if (!defined('WPINC'))
 	exit;
 }
 
-// use \Kernel\Config;
 use \Kernel\Core;
 use \Kernel\Plugin;
-use \Register\Assets;
-use \Register\Hooks;
-use \Register\Posts;
-use \Register\Settings;
-use \Register\Shortcodes;
-use \Register\Widgets;
+
+// use \Register\Posts;
+// use \Register\Settings;
+// use \Register\Widgets;
 
 if (!class_exists('Kernel\Kernel'))
 {
@@ -42,12 +39,12 @@ if (!class_exists('Kernel\Kernel'))
         /**
          * Insance of Filters
          */
-        private $filters;
+        // private $filters;
         
         /**
          * Insance of Hooks
          */
-        private $hooks;
+        // private $hooks;
 
         /**
          * Insance of Plugin
@@ -67,7 +64,7 @@ if (!class_exists('Kernel\Kernel'))
         /**
          * Insance of Shortcodes
          */
-        private $shortcodes;
+        // private $shortcodes;
 
         /**
          * Insance of Widgets
@@ -80,10 +77,12 @@ if (!class_exists('Kernel\Kernel'))
         public function __construct(string $file = '')
         {
             // Core definition
-            $this->setCore();
+            $this->core = new Core();
+            // $this->setCore();
 
             // Plugin Definition
-            $this->setPlugin($file);
+            $this->plugin = new Plugin($file);
+            // $this->setPlugin($file);
 
             // echo '<pre style="padding-left: 180px;">';
             // print_r( $this->core->getConfig('uri') );
@@ -96,18 +95,18 @@ if (!class_exists('Kernel\Kernel'))
             // exit;
 
 
-            new Assets($this);
-            // $this->setFilters();
-            // $this->setHooks();
+            new \Register\Assets($this);
+            new \Register\Filters($this);
+            new \Register\Hooks($this);
             // $this->setPosts();
             // $this->setSettings();
-            // $this->setShortcodes();
+            new \Register\Shortcodes($this);
             // $this->setWidgets();
 
-            // if (is_admin()) 
-            // {
-            //     new \Kernel\Upgrader($this);
-            // }
+            if (is_admin()) 
+            {
+                // new \Kernel\Upgrader($this);
+            }
 
 
 
@@ -148,28 +147,8 @@ if (!class_exists('Kernel\Kernel'))
         // --
 
         /**
-         * Assets
-         */
-        // private function setAssets()
-        // {
-        //     $this->assets = new Assets($this);
-
-        //     return $this;
-        // }
-        // public function getAssets()
-        // {
-        //     return $this->assets;
-        // }
-
-        /**
          * The Core
          */
-        private function setCore()
-        {
-            $this->core = new Core();
-
-            return $this;
-        }
         public function getCore()
         {
             return $this->core;
@@ -178,40 +157,34 @@ if (!class_exists('Kernel\Kernel'))
         /**
          * Filters
          */
-        private function setFilters()
-        {
-            $this->filters = new Filters();
+        // private function setFilters()
+        // {
+        //     $this->filters = new Filters();
 
-            return $this;
-        }
-        public function getFilters()
-        {
-            return $this->filters;
-        }
+        //     return $this;
+        // }
+        // public function getFilters()
+        // {
+        //     return $this->filters;
+        // }
 
         /**
          * Hooks
          */
-        private function setHooks()
-        {
-            $this->hooks = new Hooks();
+        // private function setHooks()
+        // {
+        //     $this->hooks = new Hooks();
 
-            return $this;
-        }
-        public function getHooks()
-        {
-            return $this->hooks;
-        }
+        //     return $this;
+        // }
+        // public function getHooks()
+        // {
+        //     return $this->hooks;
+        // }
 
         /**
          * The Plugin
          */
-        private function setPlugin(string $file = '')
-        {
-            $this->plugin = new Plugin($file);
-
-            return $this;
-        }
         public function getPlugin()
         {
             return $this->plugin;
@@ -248,16 +221,16 @@ if (!class_exists('Kernel\Kernel'))
         /**
          * Shortcodes
          */
-        private function setShortcodes()
-        {
-            $this->shortcodes = new Shortcodes();
+        // private function setShortcodes()
+        // {
+        //     $this->shortcodes = new Shortcodes();
 
-            return $this;
-        }
-        public function getShortcodes()
-        {
-            return $this->shortcodes;
-        }
+        //     return $this;
+        // }
+        // public function getShortcodes()
+        // {
+        //     return $this->shortcodes;
+        // }
 
         /**
          * Widgets

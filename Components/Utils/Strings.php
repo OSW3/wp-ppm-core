@@ -1,6 +1,6 @@
 <?php
 
-namespace Components\Strings;
+namespace Components\Utils;
 
 // Make sure we don't expose any info if called directly
 if (!defined('WPINC'))
@@ -11,7 +11,7 @@ if (!defined('WPINC'))
 }
 
 
-if (!class_exists('Components\Strings\Strings'))
+if (!class_exists('Components\Utils\Strings'))
 {
 	class Strings
 	{

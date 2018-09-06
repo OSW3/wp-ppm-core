@@ -10,39 +10,17 @@ if (!defined('WPINC'))
 	exit;
 }
 
-use \Kernel\Config;
-use \Register\Actions;
-use \Components\FileSystem as FS;
-
 if (!class_exists('Register\Hooks'))
 {
-	class Hooks extends Actions
+	class Hooks extends \Register\Actions
 	{
         /**
-         * Retrieve list of hooks
+         * The Function file Header
          */
-        public function getActions()
-        {
-            return $this->bs->getHooks();
-        }
-
-        /**
-         * 
-         */
-        public function getHeaders()
-        {
-            return [
-                'priority' => 'Priority',
-                'params' => 'Params',
-            ];
-        }
-
-        /**
-         * Define the Hooks directory
-         */
-        public function getDirectory()
-        {
-            return FS::DIRECTORY_HOOKS;
-        }
+        const HEADERS = [
+            'priority' => 'Priority',
+            'params' => 'Params',
+        ];
+        
     }
 }
