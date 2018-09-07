@@ -12,50 +12,18 @@ if (!defined('WPINC'))
 	exit;
 }
 
-use \Components\Strings;
-use \Components\FileSystem as FS;
-use \Components\Notices;
-use \Components\Form\Response;
-use \Components\Form\Types\Password;
-use \Kernel\Session;
-use \Register\Taxonomy;
+use \Components\Form\Types;
+use \Components\Utils\Misc;
+use \Components\Utils\Strings;
+use \Kernel\Request;
+use \Register\Assets;
+use \Register\Categories;
+use \Register\Tags;
 
 if (!class_exists('Register\Posts'))
 {
 	class Posts
 	{
-        /**
-         * Max size for the custom post type identifier
-         */
-        const POSTTYPE_MAX_SIZE = 20;
-
-        /**
-         * List of valid Types
-         */
-        const TYPES = ['checkbox','choices','collection','color','date',
-            'datetime','email','file','hidden','month','number','option',
-            'output','password','radio','range','captcha','search','tel',
-            'text','textarea','time','url','week','wysiwyg','year'];
-
-        /**
-         * List of custom post parameters we want to internationalize
-         */
-        const LABELS_UI = ['singular_name','add_new','add_new_item','edit_item',
-            'new_item','view_item','view_items','search_items','not_found',
-            'not_found_in_trash','parent_item_colon','all_items','archives',
-            'attributes','insert_into_item','uploaded_to_this_item',
-            'featured_image','set_featured_image','remove_featured_image',
-            'use_featured_image','menu_name','filter_items_list',
-            'items_list_navigation','items_list'];
-
-        /**
-         * Available EndPoint Mask
-         */
-        const ENDPOINT_MASK = ["EP_NONE", "EP_PERMALINK", "EP_ATTACHMENT", 
-            "EP_DATE", "EP_YEAR", "EP_MONTH", "EP_DAY", "EP_ROOT", 
-            "EP_COMMENTS", "EP_SEARCH", "EP_CATEGORIES", "EP_TAGS", 
-            "EP_AUTHORS", "EP_PAGES", "EP_ALL_ARCHIVES", "EP_ALL"];
-
         /**
          * Capapility Types
          */
@@ -64,111 +32,183 @@ if (!class_exists('Register\Posts'))
         /**
          * Default supports
          */
-        const SUPPORTS = ['title', 'editor'];
+        const DEFAULT_SUPPORTS = ['title', 'editor'];
 
         /**
-         * The instance of the bootstrap class
-         * 
-         * @param object instance
+         * Available EndPoint Mask
          */
-        protected $bs;
+        const ENDPOINT_MASK = ["EP_NONE", "EP_PERMALINK", "EP_ATTACHMENT",  "EP_DATE", "EP_YEAR", "EP_MONTH", "EP_DAY", "EP_ROOT",  "EP_COMMENTS", "EP_SEARCH", "EP_CATEGORIES", "EP_TAGS",  "EP_AUTHORS", "EP_PAGES", "EP_ALL_ARCHIVES", "EP_ALL"];
 
         /**
-         * Posts register
+         * Max size for the custom post type identifier
+         */
+        const POSTTYPE_SIZE = 20;
+
+        /**
+         * Collections (type) register
+         */
+        private $collections;
+
+        /**
+         * Definition of merged Posts from Core & Plugin
          * 
          * @param array
          */
-        private $posts = array();
+        private $definition;
 
         /**
-         * Types register
+         * The instance of Kernel
+         * 
+         * Content instance of Core & Plugin
+         * @param array
          */
-        private $types = array();
-
-        /**
-         * Types (collection) register
-         */
-        private $collections = array();
+        private $kernel;
 
         /**
          * Current post 
          * 
          * @param array
          */
-        private $post = array();
+        private $post;
 
         /**
-         * Responses data
+         * Posts register
          * 
          * @param array
          */
-        private $responses = array();
+        private $posts;
 
         /**
+         * Types register
          * 
+         * @param array
          */
-        public function __construct($bs)
-        {
-            // Retrieve the bootstrap class instance
-            $this->bs = $bs;
+        private $types;
 
-            // Set custom Posts to $this->posts register
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        // /**
+        //  * List of custom post parameters we want to internationalize
+        //  */
+        // const LABELS_UI = ['singular_name','add_new','add_new_item','edit_item',
+        //     'new_item','view_item','view_items','search_items','not_found',
+        //     'not_found_in_trash','parent_item_colon','all_items','archives',
+        //     'attributes','insert_into_item','uploaded_to_this_item',
+        //     'featured_image','set_featured_image','remove_featured_image',
+        //     'use_featured_image','menu_name','filter_items_list',
+        //     'items_list_navigation','items_list'];
+
+
+        // /**
+        //  * Responses data
+        //  * 
+        //  * @param array
+        //  */
+        // private $responses = array();
+
+        /**
+         * Constructor
+         */
+        public function __construct($kernel)
+        {
+            // Retrieve instance of Kernel
+            $this->kernel = $kernel;
+
+            // Request data
+            $this->request = new Request;
+
+            // Posts definition
+            $this->setDefinition($this->kernel->getCore());
+            $this->setDefinition($this->kernel->getPlugin());
+
+            // Define Formated Posts
             $this->setPosts();
 
-            // Set Types to $this->types register
+            // Define Types
             $this->setTypes();
 
-            // Verify each parameters and format the Post array and finaly,
-            // add the post to the register
+            // Load Posts
             foreach ($this->getPosts() as $post) 
             {
                 // Set current Post in loop
                 $this->setPost($post);
 
-                // Define the Label(s)
+                // // Define the Label(s)
                 $post = $this->setLabel($post);
                 $post = $this->setLabels($post);
                 
                 // Define the Description
+                // $post['description']
                 $post = $this->setDescription($post);
 
                 // Is public post ?
+                // $post['public']
                 $post = $this->setPublic($post);
 
                 // Is Hierarchical post ?
+                // $post['hierarchical']
                 $post = $this->setHierarchical($post);
 
                 // Show UI
+                // $post['show_ui']
                 $post = $this->setShowUI($post);
 
                 // Show in Menu
+                // $post['show_in_menu'] 
                 $post = $this->setShowInMenu($post);
 
                 // Show the custom posts in Menus Manager
+                // $post['show_in_nav_menus']
                 $post = $this->setShowInNavMenus($post);
 
                 // Show in Menu Bar (topbar)
+                // $post['show_in_admin_bar']
                 $post = $this->setShowInMenuBar($post);
 
                 // Menu Position
+                // $post['menu_position']
                 $post = $this->setMenuPosition($post);
 
                 // Menu Icon
+                // $post['menu_icon']
                 $post = $this->setMenuIcon($post);
 
                 // Has Archive
+                // $post['has_archive']
                 $post = $this->setHasArchive($post);
 
                 // Define if is exportable
+                // $post['can_export']
                 $post = $this->setCanExport($post);
 
                 // Define query rules
+                // $post['query']
                 $post = $this->setQuery($post);
 
                 // REST
+                // $post['show_in_rest']
+                // $post['rest_base']
+                // $post['rest_controller_class']
                 $post = $this->setREST($post);
 
                 // Define rewrite rules
+                // $post['rewrite']
                 $post = $this->setRewrite($post);
 
                 // Define Capabilities
@@ -178,13 +218,14 @@ if (!class_exists('Register\Posts'))
                 $post = $this->setEditLink($post);
 
                 // Define Categories
-                new Taxonomy($this->bs, 'categories', $post);
+                new Categories($post);
 
                 // Define Tags
-                new Taxonomy($this->bs, 'tags', $post);
+                new Tags($post);
 
                 // Add Metaboxes (and supports)
-                $metaboxes = new Metaboxes($this->bs, $post);
+                // $metaboxes = new Metaboxes($post, $this->kernel->getPlugin()->getConfig('namespace'));
+                $metaboxes = new Metaboxes($post);
                 $supports = $metaboxes->getSupports();
 
                 // Define Supports
@@ -203,80 +244,115 @@ if (!class_exists('Register\Posts'))
                 // $post = $this->i18n($post);
 
                 // Add the custom post to the register
+                // register_post_type( "azertyui", [] );
                 register_post_type( $post['type'], $post );
 
-                // Create shortcodes
-                $this->setShortcodes($post);
+            //     // Create shortcodes
+            //     $this->setShortcodes($post);
 
-                if ($this->bs->request()->getPostType() == $post['type'])
+
+
+    
+                echo '<pre style="padding-left: 180px;">';
+                print_r( $supports );
+                echo '</pre>';
+
+                if ($this->request->post('type') == $post['type'])
                 {
-                    // -- Posts list
+            //         // -- Posts list
 
-                    add_action( 'pre_get_posts', [ $this, 'pre_get_posts' ]);
+            //         add_action( 'pre_get_posts', [ $this, 'pre_get_posts' ]);
 
-                    // Manage Post Column 
-                    add_filter( "manage_{$post['type']}_posts_columns", function($columns) use ($post) { return $this->manage_posts_columns($columns, $post); });
-                    add_action( "manage_{$post['type']}_posts_custom_column" , function($column, $id) use ($post) { $this->manage_posts_custom_column($column, $id, $post); }, 10, 2 );
-                    add_filter( "manage_edit-{$post['type']}_sortable_columns", function($columns) use ($post) { return $this->manage_sortable_columns($columns, $post); });
+            //         // Manage Post Column 
+            //         add_filter( "manage_{$post['type']}_posts_columns", function($columns) use ($post) { return $this->manage_posts_columns($columns, $post); });
+            //         add_action( "manage_{$post['type']}_posts_custom_column" , function($column, $id) use ($post) { $this->manage_posts_custom_column($column, $id, $post); }, 10, 2 );
+            //         add_filter( "manage_edit-{$post['type']}_sortable_columns", function($columns) use ($post) { return $this->manage_sortable_columns($columns, $post); });
 
-                    // Menu action on Admin index rows
-                    add_filter('post_row_actions', function($actions) use ($post) { return $this->post_row_actions($actions, $post); }, 10, 1);
+            //         // Menu action on Admin index rows
+            //         add_filter('post_row_actions', function($actions) use ($post) { return $this->post_row_actions($actions, $post); }, 10, 1);
     
 
-                    // -- Posts Edit
+            //         // -- Posts Edit
 
-                    // Post submission
-                    add_action('pre_post_update', array($this, "pre_post_update"));
+            //         // Post submission
+            //         add_action('pre_post_update', array($this, "pre_post_update"));
     
-                    // Notice (flashbag)
-                    add_action('admin_notices', array(new Notices($this->bs->getNamespace()), "get"));
+            //         // Notice (flashbag)
+            //         add_action('admin_notices', array(new Notices($this->bs->getNamespace()), "get"));
     
-                    // Clear the post session
-                    add_action('clear_post_session', function() use ($post) { $this->clear_post_session($post); });
-                    add_action('wp_footer', [$this, "clear_post_session"], 10);
-                    add_action('admin_footer', [$this, "clear_post_session"], 10);
+            //         // Clear the post session
+            //         add_action('clear_post_session', function() use ($post) { $this->clear_post_session($post); });
+            //         add_action('wp_footer', [$this, "clear_post_session"], 10);
+            //         add_action('admin_footer', [$this, "clear_post_session"], 10);
 
 
-                    // -- Misc Options
+            //         // -- Misc Options
 
-                    add_filter('screen_options_show_screen', function() use ($post) { return $this->screen_options_show_screen($post); });
+            //         add_filter('screen_options_show_screen', function() use ($post) { return $this->screen_options_show_screen($post); });
                 }
             }
         }
 
-
         /**
          * ----------------------------------------
-         * Post Config Getter / Setter
+         * Posts Definition
          * ----------------------------------------
          */
 
         /**
-         * Posts
+         * Definition 
+         * 
+         * Retrieve definition of both Core & Plugin "Posts"
          */
-        private function setPosts()
+        private function setDefinition($context)
         {
-            // Retrieve Posts declaration from config
-            $posts = $this->bs->getPosts();
-
-            // ReDefine default $_posts as array
-            $posts = is_array($posts) ? $posts : [];
-
-            // Add each post to $this->posts
-            foreach ($posts as $post) 
+            if (!is_array($this->definition))
             {
-                $this->addPost($post);
+                $this->definition = array();
+            }
+
+            foreach ($context->getConfig('posts') as $definition) 
+            {
+                if (is_array($definition))
+                {
+                    $definition['context'] = $context;
+                    // $definition['context'] = $context->getConfig('context');
+                    array_push($this->definition, $definition);
+                }
             }
 
             return $this;
         }
-        public function getPosts( $posttype = null )
+        private function getDefinition()
         {
-            if (null != $posttype)
+            return $this->definition;
+        }
+
+        /**
+         * Posts
+         * 
+         * Retrieve valid Posts only (from definition)
+         */
+        private function setPosts()
+        {
+            // Retrieve Posts definition
+            $posts = $this->getDefinition();
+
+            // Add each definition to $this->posts
+            foreach ($posts as $post) 
+            {
+                $this->addPosts($post);
+            }
+
+            return $this;
+        }
+        public function getPosts( string $type = '' )
+        {
+            if (!empty($type))
             {
                 foreach ($this->posts as $post) 
                 {
-                    if ($post['type'] == $posttype)
+                    if ($post['type'] == $type)
                     {
                         $this->posts = $post;
                         continue;
@@ -286,73 +362,13 @@ if (!class_exists('Register\Posts'))
 
             return $this->posts;
         }
-
-        /**
-         * Post
-         */
-        private function setPost(array $post)
+        private function addPosts(array $post)
         {
-            $this->post = $post;
-
-            return $this;
-        }
-        private function isValidPostType(array $post)
-        {
-            // Default $type
-            $posttype = null;
-
-            // Default Is Valid (true)
-            $isValid = true;
-
-            // Retrieve the type
-            if (isset($post['type']) && is_string($post['type'])) 
+            if (!is_array($this->posts))
             {
-                $posttype = $post['type'];
+                $this->posts = array();
             }
 
-            // Define error if $posttype is empty
-            if (empty($posttype)) 
-            {
-                $isValid = false;
-                $errorMessage = "<strong>Invalid Post Type</strong> : The post type can't be empty.";
-            }
-
-            // Check chars length
-            if (strlen($posttype) > self::POSTTYPE_MAX_SIZE) 
-            {
-                $isValid = false;
-                $errorMessage = "<strong>Invalid Post Type</strong> : The post type (".$post['type'].") must have ".self::POSTTYPE_MAX_SIZE." chars max.";
-            }
-
-            // Check chars type
-            if (!preg_match("/^[a-z0-9_]*$/i", $posttype))
-            {
-                $isValid = false;
-                $errorMessage = "<strong>Invalid Post Type</strong> : The post type (".$post['type'].") must content only alpha, numeric and underscore.";
-            }
-
-            // Display error
-            if (!$isValid && 'development' == $this->bs->getEnvironment()) 
-            {
-                trigger_error($errorMessage, E_USER_WARNING);
-            }
-
-            return $isValid;
-        }
-        private function postExists(string $posttype)
-        {
-            foreach ($this->posts as $post) 
-            {
-                if (isset($post['type']) && null != $posttype && $post['type'] == $posttype)
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-        private function addPost(array $post)
-        {
             // Check the Post Type and Post Existance
             if ($this->isValidPostType($post) && !$this->postExists($post['type']))
             {
@@ -363,10 +379,36 @@ if (!class_exists('Register\Posts'))
         }
 
         /**
+         * Current Post
+         */
+        private function setPost(array $post)
+        {
+            $this->post = $post;
+
+            return $this;
+        }
+        private function getPost(string $key = '')
+        {
+            if (!empty($key) && isset($this->post[$key]))
+            {
+                return $this->post[$key];
+            }
+
+            return null;
+        }
+
+        /**
          * Types
+         * 
+         * Retrieve Posts Type (Posts Fields definition)
          */
         private function setTypes()
         {
+            if (!is_array($this->types))
+            {
+                $this->types = array();
+            }
+
             // Retrieve each Posts
             foreach ($this->posts as $post) 
             {
@@ -382,7 +424,7 @@ if (!class_exists('Register\Posts'))
             }
 
             // Rebuild Collection Type
-            $this->rebuildCollectionTypes();
+            $this->setCollectionTypes();
 
             // Add Virtual post
             foreach ($this->types as $posttype => $types) 
@@ -395,7 +437,7 @@ if (!class_exists('Register\Posts'))
                         $vp_hash = substr(hash("sha256", $vp_type), 0, 10);
                         $vp_name = "vp_".$vp_hash;
 
-                        $this->addPost([
+                        $this->addPosts([
                             'type' => $vp_name,
                             'name' => $vp_name,
                             'public' => false,
@@ -430,58 +472,6 @@ if (!class_exists('Register\Posts'))
         {
             return $this->types;
         }
-
-        /**
-         * Type
-         */
-        private function getType(string $key)
-        {
-            if (isset($this->types[$key]))
-            {
-                return $this->types[$key];
-            }
-
-            return null;
-        }
-        public function isValidType(array $type)
-        {
-            // Default Is Valid (true)
-            $isValid = true;
-
-            // Check Type Key
-            if (!isset($type['key']))
-            {
-                $isValid = false;
-                $errorMessage = "<strong>Undefined Type Key</strong> : The type key parameter is required.";
-            }
-
-            if (isset($type['key']) && !preg_match("/^[a-z0-9_]*$/i", $type['key']))
-            {
-                $isValid = false;
-                $errorMessage = "<strong>Invalid Type Key</strong> : The type key (".$type['key'].") must content only alpha, numeric and underscore.";
-            }
-
-            // Check Type Type
-            if (!isset($type['type']))
-            {
-                $isValid = false;
-                $errorMessage = "<strong>Undefined Type Field</strong> : The field type parameter is required. Valid types field are ".implode(", ", self::TYPES).".";
-            }
-
-            if (isset($type['type']) && !in_array($type['type'], self::TYPES))
-            {
-                $isValid = false;
-                $errorMessage = "<strong>Invalid Type Field</strong> : The field type \"".$type['type']."\" is not valid. Valid types field are ".implode(", ", self::TYPES).".";
-            }
-
-            // Display error
-            if (!$isValid && 'development' == $this->bs->getEnvironment()) 
-            {
-                trigger_error($errorMessage, E_USER_WARNING);
-            }
-
-            return $isValid;
-        }
         public function addType(array $type, array $post)
         {
             if (!isset($this->types[$post['type']]) || !is_array($this->types[$post['type']]))
@@ -493,14 +483,13 @@ if (!class_exists('Register\Posts'))
             {
                 // Add Type to $this->types register
                 $this->types[$post['type']] += [
-                    $type['key'] => $this->fulltype($type)
+                    $type['key'] => $this->formatType($type)
                 ];
             }
 
             return $this;
         }
-
-        private function fulltype(array $type)
+        private function formatType(array $type)
         {
             // Define Types default values
             $type['value']                  = null;
@@ -592,7 +581,7 @@ if (!class_exists('Register\Posts'))
         /**
          * Types Collection
          */
-        public function rebuildCollectionTypes()
+        public function setCollectionTypes()
         {
             // Retrieve collections type
             $this->setCollections();
@@ -602,6 +591,11 @@ if (!class_exists('Register\Posts'))
         }
         private function setCollections()
         {
+            if (!is_array($this->collections))
+            {
+                $this->collections = array();
+            }
+
             foreach ($this->types as $posttype => $types)
             {
                 if (!isset($this->collections[$posttype]))
@@ -665,7 +659,6 @@ if (!class_exists('Register\Posts'))
                             }
                         }
 
-
                         foreach (['_PARENT', '_VPOST', '_VPOST_ID'] as $_vkey) 
                         {
                             array_push($this->types[$posttype][$collection_name]['schema'], [
@@ -717,6 +710,115 @@ if (!class_exists('Register\Posts'))
             {
                 $this->setSchemaCollection();
             }
+        }
+
+
+        /**
+         * ----------------------------------------
+         * Param Validation
+         * ----------------------------------------
+         */
+
+        /**
+         * Check Post Type
+         */
+        private function isValidPostType(array $post)
+        {
+            // Default $type
+            $posttype = null;
+
+            // Default Is Valid (true)
+            $isValid = true;
+
+            // Retrieve the type
+            if (isset($post['type']) && is_string($post['type'])) 
+            {
+                $posttype = $post['type'];
+            }
+
+            // Define error if $posttype is empty
+            if (empty($posttype)) 
+            {
+                $isValid = false;
+                $errorMessage = "<strong>Invalid Post Type</strong> : The post type can't be empty.";
+            }
+
+            // Check chars length
+            if (strlen($posttype) > self::POSTTYPE_SIZE) 
+            {
+                $isValid = false;
+                $errorMessage = "<strong>Invalid Post Type</strong> : The post type (".$post['type'].") must have ".self::POSTTYPE_SIZE." chars max.";
+            }
+
+            // Check chars type
+            if (!preg_match("/^[a-z0-9_]*$/i", $posttype))
+            {
+                $isValid = false;
+                $errorMessage = "<strong>Invalid Post Type</strong> : The post type (".$post['type'].") must content only alpha, numeric and underscore.";
+            }
+
+            // Display error
+            if (!$isValid && 'development' == $this->kernel->getPlugin()->getConfig('environment')) 
+            {
+                trigger_error($errorMessage, E_USER_WARNING);
+            }
+
+            return $isValid;
+        }
+        private function postExists(string $type)
+        {
+            foreach ($this->posts as $post) 
+            {
+                if (isset($post['type']) && null != $type && $post['type'] == $type)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /**
+         * Check Types
+         */
+        public function isValidType(array $type)
+        {
+            // Default Is Valid (true)
+            $isValid = true;
+
+            // Check Type Key
+            if (!isset($type['key']))
+            {
+                $isValid = false;
+                $errorMessage = "<strong>Undefined Type Key</strong> : The type key parameter is required.";
+            }
+
+            if (isset($type['key']) && !preg_match("/^[a-z0-9_]*$/i", $type['key']))
+            {
+                $isValid = false;
+                $errorMessage = "<strong>Invalid Type Key</strong> : The type key (".$type['key'].") must content only alpha, numeric and underscore.";
+            }
+
+            // Check Type Type
+            if (!isset($type['type']))
+            {
+                $isValid = false;
+                $errorMessage = "<strong>Undefined Type Field</strong> : The field type parameter is required. Valid types field are ".implode(", ", Types::ALLOWED).".";
+            }
+
+            if (isset($type['type']) && !in_array($type['type'], Types::ALLOWED))
+            {
+                $isValid = false;
+                $errorMessage = "<strong>Invalid Type Field</strong> : The field type \"".$type['type']."\" is not valid. Valid types field are ".implode(", ", Types::ALLOWED).".";
+            }
+
+            // Display error
+            if (!$isValid && 'development' == $this->bs->getEnvironment()) 
+            {
+                trigger_error($errorMessage, E_USER_WARNING);
+            }
+
+            return $isValid;
         }
 
 
@@ -1017,7 +1119,10 @@ if (!class_exists('Register\Posts'))
             {
                 $post['labels'] = array_merge(
                     $post['labels'], 
-                    $this->bs->i18n(self::LABELS_UI, $post['ui']['labels'])
+                    $post['ui']['labels']
+
+                    // TODO : i18n
+                    // $this->bs->i18n(self::LABELS_UI, $post['ui']['labels'])
                 );
 
                 unset($post['ui']['labels']);
@@ -1040,9 +1145,18 @@ if (!class_exists('Register\Posts'))
             {
                 if (preg_match("/^@/", $post['ui']['menus']['main']['icon']))
                 {
+                    if (isset($post['context']) && is_object($post['context']))
+                    {
+                        $context = $post['context'];
+                    }
+                    else
+                    {
+                        $context = $this->kernel->getPlugin();
+                    }
+
                     $file = preg_replace("/^@/", null, $post['ui']['menus']['main']['icon']);
-                    $file_path = $this->bs->getRoot().FS::DIRECTORY_IMAGES.$file;
-                    $file_uri = $this->bs->getUri().FS::DIRECTORY_IMAGES.$file;
+                    $file_path = $context->getConfig('directory').Assets::DIRECTORY_IMAGES.$file;
+                    $file_uri = $context->getConfig('uri').Assets::DIRECTORY_IMAGES.$file;
                     
                     if (file_exists($file_path))
                     {
@@ -1193,6 +1307,28 @@ if (!class_exists('Register\Posts'))
         }
 
         /**
+         * Where to show the post type in the admin menu
+         * 
+         * @param array $post
+         * @return array $post
+         */
+        private function setShowInMenu(array $post)
+        {
+            $post['show_in_menu'] = $post['show_ui'];
+
+            if (isset($post['ui']['menus']['main']['display']))
+            {
+                if (is_bool($post['ui']['menus']['main']['display']))
+                {
+                    $post['show_in_menu'] = $post['ui']['menus']['main']['display'];
+                }
+                unset($post['ui']['menus']['main']['display']);
+            }
+
+            return $post;
+        }
+
+        /**
          * Define REST parameters
          * 
          * @param array $post
@@ -1263,6 +1399,281 @@ if (!class_exists('Register\Posts'))
 
             return $post;
         }
+
+        /**
+         * Define Makes this post type available for selection in navigation menus
+         * 
+         * @param array $post
+         * @return array $post
+         */
+        private function setShowInNavMenus(array $post)
+        {
+            // WP Default value
+            // $post['show_in_nav_menus'] = $post['public'];
+
+            // PPM Default Value
+            $post['show_in_nav_menus'] = false;
+
+            if (isset($post['ui']['pages']['menus']['display']))
+            {
+                if (is_bool($post['ui']['pages']['menus']['display'])) 
+                {
+                    $post['show_in_nav_menus'] = $post['ui']['pages']['menus']['display'];
+                }
+                unset($post['ui']['pages']['menus']['display']);
+            }
+
+            return $post;
+        }
+
+        /**
+         * Makes this post type available via the admin bar
+         * 
+         * @param array $post
+         * @return array $post
+         */
+        private function setShowInMenuBar(array $post)
+        {
+            $post['show_in_admin_bar'] = $post['show_in_menu'];
+
+            if (isset($post['ui']['menus']['top']['display']))
+            {
+                if (is_bool($post['ui']['menus']['top']['display']))
+                {
+                    $post['show_in_admin_bar'] = $post['ui']['menus']['top']['display'];
+                }
+                unset($post['ui']['menus']['top']['display']);
+            }
+
+            if (!isset($post['show_in_admin_bar']) || !is_bool($post['show_in_admin_bar']))
+            {
+                $post['show_in_admin_bar'] = $post['show_in_menu'];
+            }
+
+            return $post;
+        }
+
+        /**
+         * Define Whether to generate and allow a UI for managing this post 
+         * type in the admin. 
+         * 
+         * @param array $post
+         * @return array $post
+         */
+        private function setShowUI(array $post)
+        {
+            $post['show_ui'] = $post['public'];
+
+            if (isset($post['ui']['show_ui']))
+            {
+                if (is_bool($post['ui']['show_ui']))
+                {
+                    $post['show_ui'] = $post['ui']['show_ui'];
+                }
+                unset($post['ui']['show_ui']);
+            }
+
+            return $post;
+        }
+
+        /**
+         * Define the slug of custom post
+         * 
+         * @param array $rewrite
+         * @param array $post
+         * @return array $rewrite
+         */
+        private function setSlug(array $rewrite, array $post)
+        {
+            if (!isset($rewrite['slug']) || empty(trim($rewrite['slug'])))
+            {
+                $rewrite['slug'] = $post['type'];
+            }
+
+            switch ($rewrite['slug']) 
+            {
+                case '@type':
+                    $rewrite['slug'] = $post['type'];
+                    break;
+                
+                case '@name':
+                    $rewrite['slug'] = Strings::slugify($post['label'], '_');
+                    break;
+                
+                default:
+                    $rewrite['slug'] = Strings::slugify($rewrite['slug'], '_');
+                    break;
+            }
+
+            return $rewrite;
+        }
+
+        /**
+         * Define Supports
+         * 
+         * @param array $supports
+         * @param array $post
+         * @return array $post
+         */
+        private function setSupports($supports, array $post)
+        {
+            // Default Supports
+            $post['supports'] = self::DEFAULT_SUPPORTS;
+
+            if (is_array($supports)) 
+            {
+                foreach ($supports as $support) 
+                {
+                    if (isset($support['key']))
+                    {
+                        // Default display
+                        $display = in_array($support['key'], self::DEFAULT_SUPPORTS) ? true : false;
+
+                        // Define $display
+                        if (isset($support['display']) && is_bool($support['display'])) 
+                        {
+                            $display = $support['display'];
+                        }
+
+                        if (!$display && in_array($support['key'], self::DEFAULT_SUPPORTS)) 
+                        {
+                            $index = array_search($support['key'], $post['supports']);
+                            unset($post['supports'][$index]);
+                        }
+                        else if ($display && !in_array($support['key'], $post['supports'])) 
+                        {
+                            array_push($post['supports'], $support['key']);
+                        }
+                    }
+                }
+            }
+
+            // Add an empty string entry to $post['support] if this array is 
+            // empty, to prevent the default WP supports.
+            if (empty($post['supports']))
+            {
+                array_push($post['supports'], '');
+                if (is_admin())
+                {
+                    Misc::injection("<style>#post-body-content {margin-bottom: 0px;}</style>", "head", "admin");
+                }
+            }
+
+            return $post;
+        }
+
+        /**
+         * Define if structure has a pagination
+         * 
+         * @param array $rewrite
+         * @return array $rewrite
+         */
+        private function setWithFront(array $rewrite)
+        {
+            $rewrite['with_front'] = false;
+
+            if (isset($rewrite['prefixed']))
+            {
+                if (is_bool($rewrite['prefixed']))
+                {
+                    $rewrite['with_front'] = $rewrite['prefixed'];
+                }
+                unset($rewrite['prefixed']);
+            }
+
+            return $rewrite;
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        /**
+         * ----------------------------------------
+         * Post Config Getter / Setter
+         * ----------------------------------------
+         */
+        /**
+         * Type
+         */
+        // private function getType(string $key)
+        // {
+        //     if (isset($this->types[$key]))
+        //     {
+        //         return $this->types[$key];
+        //     }
+
+        //     return null;
+        // }
+
+
+
+
+        /**
+         * ----------------------------------------
+         * Checking and Default Post Params
+         * ----------------------------------------
+         */
 
         /**
          * Create the shortcode of the Type
@@ -1407,214 +1818,6 @@ if (!class_exists('Register\Posts'))
                 }
             }
 
-        }
-
-        /**
-         * Where to show the post type in the admin menu
-         * 
-         * @param array $post
-         * @return array $post
-         */
-        private function setShowInMenu(array $post)
-        {
-            $post['show_in_menu'] = $post['show_ui'];
-
-            if (isset($post['ui']['menus']['main']['display']))
-            {
-                if (is_bool($post['ui']['menus']['main']['display']))
-                {
-                    $post['show_in_menu'] = $post['ui']['menus']['main']['display'];
-                }
-                unset($post['ui']['menus']['main']['display']);
-            }
-
-            return $post;
-        }
-
-        /**
-         * Makes this post type available via the admin bar
-         * 
-         * @param array $post
-         * @return array $post
-         */
-        private function setShowInMenuBar(array $post)
-        {
-            $post['show_in_admin_bar'] = $post['show_in_menu'];
-
-            if (isset($post['ui']['menus']['top']['display']))
-            {
-                if (is_bool($post['ui']['menus']['top']['display']))
-                {
-                    $post['show_in_admin_bar'] = $post['ui']['menus']['top']['display'];
-                }
-                unset($post['ui']['menus']['top']['display']);
-            }
-
-
-
-            if (!isset($post['show_in_admin_bar']) || !is_bool($post['show_in_admin_bar']))
-            {
-                $post['show_in_admin_bar'] = $post['show_in_menu'];
-            }
-
-            return $post;
-        }
-
-        /**
-         * Define Makes this post type available for selection in navigation menus
-         * 
-         * @param array $post
-         * @return array $post
-         */
-        private function setShowInNavMenus(array $post)
-        {
-            // WP Default value
-            // $post['show_in_nav_menus'] = $post['public'];
-
-            // PPM Default Value
-            $post['show_in_nav_menus'] = false;
-
-            if (isset($post['ui']['pages']['menus']['display']))
-            {
-                if (is_bool($post['ui']['pages']['menus']['display'])) 
-                {
-                    $post['show_in_nav_menus'] = $post['ui']['pages']['menus']['display'];
-                }
-                unset($post['ui']['pages']['menus']['display']);
-            }
-
-            return $post;
-        }
-
-        /**
-         * Define Whether to generate and allow a UI for managing this post 
-         * type in the admin. 
-         * 
-         * @param array $post
-         * @return array $post
-         */
-        private function setShowUI(array $post)
-        {
-            $post['show_ui'] = $post['public'];
-
-            if (isset($post['ui']['show_ui']))
-            {
-                if (is_bool($post['ui']['show_ui']))
-                {
-                    $post['show_ui'] = $post['ui']['show_ui'];
-                }
-                unset($post['ui']['show_ui']);
-            }
-
-            return $post;
-        }
-
-        /**
-         * Define the slug of custom post
-         * 
-         * @param array $rewrite
-         * @param array $post
-         * @return array $rewrite
-         */
-        private function setSlug(array $rewrite, array $post)
-        {
-            if (!isset($rewrite['slug']) || empty(trim($rewrite['slug'])))
-            {
-                $rewrite['slug'] = $post['type'];
-            }
-
-            switch ($rewrite['slug']) 
-            {
-                case '@type':
-                    $rewrite['slug'] = $post['type'];
-                    break;
-                
-                case '@name':
-                    $rewrite['slug'] = Strings::slugify($post['label'], '_');
-                    break;
-                
-                default:
-                    $rewrite['slug'] = Strings::slugify($rewrite['slug'], '_');
-                    break;
-            }
-
-            return $rewrite;
-        }
-
-        /**
-         * Define Supports
-         * 
-         * @param array $supports
-         * @param array $post
-         * @return array $post
-         */
-        private function setSupports($supports, array $post)
-        {
-            // Default Supports
-            $post['supports'] = self::SUPPORTS;
-
-            if (is_array($supports)) 
-            {
-                foreach ($supports as $support) 
-                {
-                    if (isset($support['key']))
-                    {
-                        // Default display
-                        $display = in_array($support['key'], self::SUPPORTS) ? true : false;
-
-                        // Define $display
-                        if (isset($support['display']) && is_bool($support['display'])) 
-                        {
-                            $display = $support['display'];
-                        }
-
-                        if (!$display && in_array($support['key'], self::SUPPORTS)) 
-                        {
-                            $index = array_search($support['key'], $post['supports']);
-                            unset($post['supports'][$index]);
-                        }
-                        else if ($display && !in_array($support['key'], $post['supports'])) 
-                        {
-                            array_push($post['supports'], $support['key']);
-                        }
-                    }
-                }
-            }
-
-            // Add an empty string entry to $post['support] if this array is 
-            // empty, to prevent the default WP supports.
-            if (empty($post['supports']))
-            {
-                array_push($post['supports'], '');
-                if (is_admin())
-                {
-                    $this->bs->codeInjection('head', "<style>#post-body-content {margin-bottom: 0px;}</style>");
-                }
-            }
-
-            return $post;
-        }
-
-        /**
-         * Define if structure has a pagination
-         * 
-         * @param array $rewrite
-         * @return array $rewrite
-         */
-        private function setWithFront(array $rewrite)
-        {
-            $rewrite['with_front'] = false;
-
-            if (isset($rewrite['prefixed']))
-            {
-                if (is_bool($rewrite['prefixed']))
-                {
-                    $rewrite['with_front'] = $rewrite['prefixed'];
-                }
-                unset($rewrite['prefixed']);
-            }
-
-            return $rewrite;
         }
 
 

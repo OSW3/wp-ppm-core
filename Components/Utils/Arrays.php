@@ -10,11 +10,30 @@ if (!defined('WPINC'))
 	exit;
 }
 
-
 if (!class_exists('Components\Utils\Arrays'))
 {
 	class Arrays
 	{
+        /**
+         * In Array recursive
+         */
+        public static function inArray(array $haystack, $needle, $key = null, bool $recursive = true, bool $strict = false)
+        {
+            foreach ($haystack as $index => $item)
+            {
+                if ($key === null ? ($strict ? $item === $needle : $item == $needle) : ($strict ? $index === $key && $item === $needle : $index == $key && $item == $needle))
+                {
+                    return true;
+                }
+                elseif (is_array($item))
+                {
+                    return self::inArray($item, $needle, $key, $recursive, $strict);
+                }
+            }
+
+            return false;
+        }
+
 		/**
 		 * isNumeric
          * 

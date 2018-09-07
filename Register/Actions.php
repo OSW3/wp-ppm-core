@@ -58,10 +58,10 @@ if (!class_exists('Register\Actions'))
             $this->setDefinition($this->kernel->getPlugin());
 
             // Add Actions to the register
-            $this->load();
+            $this->flush();
         }
 
-        private function load()
+        private function flush()
         {
             foreach ($this->getDefinition() as $action) 
             {
@@ -105,7 +105,7 @@ if (!class_exists('Register\Actions'))
         }
 
         /**
-         * Assets definition
+         * Actions definition
          */
         private function setDefinition($context)
         {

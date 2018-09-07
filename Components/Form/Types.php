@@ -10,13 +10,21 @@ if (!defined('WPINC'))
 	exit;
 }
 
-use \Kernel\Config;
-use \Kernel\Session;
+// use \Kernel\Config;
+// use \Kernel\Session;
 
 if (!class_exists('Components\Form\Types'))
 {
     abstract class Types
     {
+        /**
+         * List of allowed Types
+         */
+        const ALLOWED = ['checkbox','choices','collection','color','date',
+            'datetime','email','file','hidden','month','number','option',
+            'output','password','radio','range','captcha','search','tel',
+            'text','textarea','time','url','week','wysiwyg','year'];
+        
         /**
          * Field Accept
          */
@@ -200,33 +208,33 @@ if (!class_exists('Components\Form\Types'))
          */
         public function __construct(array $config, string $template_type = null)
         {
-            $this->template_type = $template_type;
+            // $this->template_type = $template_type;
 
-            // define Field Type
-            $this->setConfig($config);
+            // // define Field Type
+            // $this->setConfig($config);
 
-            // 
-            $this->session = new Session($this->getConfig('namespace'));
+            // // 
+            // $this->session = new Session($this->getConfig('namespace'));
 
-            // Init the Label
-            $this->setLabel();
+            // // Init the Label
+            // $this->setLabel();
 
-            // Init the Helper
-            $this->setHelper();
+            // // Init the Helper
+            // $this->setHelper();
 
-            // Call setter methods
-            foreach ($this->attributes() as $attribute) 
-            {
-                $attribute = strtolower($attribute);
-                $attribute = ucfirst($attribute);
-                $method = 'set'.$attribute;
-                $this->$method();
-            }
+            // // Call setter methods
+            // foreach ($this->attributes() as $attribute) 
+            // {
+            //     $attribute = strtolower($attribute);
+            //     $attribute = ucfirst($attribute);
+            //     $method = 'set'.$attribute;
+            //     $this->$method();
+            // }
 
-            // Build the field
-            $this->builder();
+            // // Build the field
+            // $this->builder();
 
-            do_action('admin_head');
+            // do_action('admin_head');
         }
 
         /**
