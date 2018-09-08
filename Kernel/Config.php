@@ -13,6 +13,8 @@ if (!defined('WPINC'))
 use \Components\Utils\Mapper;
 use \Components\Utils\Misc;
 use \Components\Utils\Strings;
+use \Kernel\Session;
+use \Register\Actions;
 
 if (!class_exists('Kernel\Config'))
 {
@@ -74,6 +76,8 @@ if (!class_exists('Kernel\Config'))
                 $this->setTitleHTML();
                 $this->setVersion();
                 $this->setWidgets();
+
+                new Session($this->getConfig('namespace'));
             }
         }
 
@@ -508,8 +512,17 @@ if (!class_exists('Kernel\Config'))
          */
         public function setShortcodes()
         {
-            $shortcodes = $this->getDefinition('shortcodes');
-            $shortcodes = is_array($shortcodes) ? $shortcodes : [];
+            $shortcodes = array();
+            $_shortcodes = $this->getDefinition('shortcodes');
+            $_shortcodes = is_array($_shortcodes) ? $_shortcodes : [];
+
+            foreach ($_shortcodes as $function => $trigger) 
+            {
+                if (Actions::isValidFunction($function))
+                {
+                    $shortcodes[$function] = $trigger;
+                }
+            }
 
             $this->addConfig('shortcodes', $shortcodes);
 

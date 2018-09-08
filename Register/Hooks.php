@@ -21,6 +21,15 @@ if (!class_exists('Register\Hooks'))
             'priority' => 'Priority',
             'params' => 'Params',
         ];
+
+        /**
+         * Execute a Hook
+         * 
+         * This is the Hook Callback function
+         */
+        public static function exec()
+        {
+        }
         
     }
 }

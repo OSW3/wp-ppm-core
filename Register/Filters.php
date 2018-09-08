@@ -23,5 +23,14 @@ if (!class_exists('Register\Filters'))
             'params' => 'Params',
         ];
 
+        /**
+         * Execute a Filter
+         * 
+         * This is the Filter Callback function
+         */
+        public static function exec()
+        {
+        }
+
     }
 }

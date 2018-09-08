@@ -34,6 +34,34 @@ if (!class_exists('Components\Utils\Arrays'))
             return false;
         }
 
+        /**
+         * Search Recursive
+         */
+        public static function search(array $haystack, array $dimensions, bool $recursive = true)
+        {
+            $dimension = null;
+
+            if (isset($dimensions[0]))
+            {
+                $dimension = $dimensions[0];
+            }
+
+            if (null !== $dimension && isset($haystack[$dimension]))
+            {
+                // Rebase $dimensions
+                unset($dimensions[0]);
+                $dimensions = array_values($dimensions);
+
+                // Rebase $haystack
+                $haystack = $haystack[$dimension];
+
+                // Return or recursive
+                return (!empty($dimensions) && $recursive) ? self::search($haystack, $dimensions) : $haystack;
+            }
+            
+            return null;
+        }
+
 		/**
 		 * isNumeric
          * 

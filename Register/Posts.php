@@ -13,9 +13,11 @@ if (!defined('WPINC'))
 }
 
 use \Components\Form\Types;
+use \Components\Utils\Arrays;
 use \Components\Utils\Misc;
 use \Components\Utils\Strings;
 use \Kernel\Request;
+use \Kernel\Session;
 use \Register\Assets;
 use \Register\Categories;
 use \Register\Tags;
@@ -79,6 +81,13 @@ if (!class_exists('Register\Posts'))
         private $posts;
 
         /**
+         * Session data
+         * 
+         * @param object Instance of Session
+         */
+        private $session;
+
+        /**
          * Types register
          * 
          * @param array
@@ -132,6 +141,9 @@ if (!class_exists('Register\Posts'))
 
             // Request data
             $this->request = new Request;
+
+            // Session data
+            $this->session = new Session($this->kernel->getPlugin()->getConfig('namespace'));
 
             // Posts definition
             $this->setDefinition($this->kernel->getCore());
@@ -244,32 +256,24 @@ if (!class_exists('Register\Posts'))
                 // $post = $this->i18n($post);
 
                 // Add the custom post to the register
-                // register_post_type( "azertyui", [] );
                 register_post_type( $post['type'], $post );
 
-            //     // Create shortcodes
-            //     $this->setShortcodes($post);
-
-
-
-    
-                echo '<pre style="padding-left: 180px;">';
-                print_r( $supports );
-                echo '</pre>';
-
+                // Create shortcodes
+                $this->setShortcodes($post);
+                
                 if ($this->request->post('type') == $post['type'])
                 {
             //         // -- Posts list
 
             //         add_action( 'pre_get_posts', [ $this, 'pre_get_posts' ]);
 
-            //         // Manage Post Column 
-            //         add_filter( "manage_{$post['type']}_posts_columns", function($columns) use ($post) { return $this->manage_posts_columns($columns, $post); });
-            //         add_action( "manage_{$post['type']}_posts_custom_column" , function($column, $id) use ($post) { $this->manage_posts_custom_column($column, $id, $post); }, 10, 2 );
-            //         add_filter( "manage_edit-{$post['type']}_sortable_columns", function($columns) use ($post) { return $this->manage_sortable_columns($columns, $post); });
+                    // Manage Post Column 
+                    add_filter( "manage_{$post['type']}_posts_columns", function($columns) use ($post) { return $this->manage_posts_columns($columns, $post); });
+                    add_action( "manage_{$post['type']}_posts_custom_column" , function($column, $id) use ($post) { $this->manage_posts_custom_column($column, $id, $post); }, 10, 2 );
+                    add_filter( "manage_edit-{$post['type']}_sortable_columns", function($columns) use ($post) { return $this->manage_sortable_columns($columns, $post); });
 
-            //         // Menu action on Admin index rows
-            //         add_filter('post_row_actions', function($actions) use ($post) { return $this->post_row_actions($actions, $post); }, 10, 1);
+                    // Menu action on Admin index rows
+                    add_filter('post_row_actions', function($actions) use ($post) { return $this->post_row_actions($actions, $post); }, 10, 1);
     
 
             //         // -- Posts Edit
@@ -286,9 +290,9 @@ if (!class_exists('Register\Posts'))
             //         add_action('admin_footer', [$this, "clear_post_session"], 10);
 
 
-            //         // -- Misc Options
+                    // -- Misc Options
 
-            //         add_filter('screen_options_show_screen', function() use ($post) { return $this->screen_options_show_screen($post); });
+                    add_filter('screen_options_show_screen', function() use ($post) { return $this->screen_options_show_screen($post); });
                 }
             }
         }
@@ -1401,6 +1405,69 @@ if (!class_exists('Register\Posts'))
         }
 
         /**
+         * Create the shortcode of the Type
+         */
+        private function setShortcodes(array $post)
+        {
+            // Declare default $types as Array
+            $types = array();
+
+            // Retrieve types of the post
+            if (isset($post['schema']))
+            {
+                $types = $post['schema'];
+            }
+
+            // Retrieve already declared Shortcodes of Core
+            $shortcodes = $this->kernel->getCore()->getConfig('shortcodes');
+
+            // Shortcode for _wp_nonce for posttype
+            array_push($types,[
+                'key' => '_nonce',
+                'shortcode' => true
+            ]);
+
+            // // Transmit Post Config by a shortcode
+            // $name = implode(':', [
+            //     $this->bs->getNamespace(),
+            //     '_posts',
+            // ]);
+            // add_shortcode($name, function(){
+            //     return json_encode($this->getPosts());
+            // });
+
+            // Generate Shortcodes for each $types
+            foreach ($types as $type) 
+            {
+                if (isset($type['shortcode']) && is_bool($type['shortcode']) && $type['shortcode'])
+                {
+                    // Retrieve the Plugin Namespace
+                    $namespace = $this->kernel->getPlugin()->getConfig('namespace');
+
+                    // Add the Type rules to the PHP Session
+                    // $this->session->push($post['type'], $type);
+                    $this->session->pushAssoc($post['type'], $type['key'], $type);
+
+                    // The trigger
+                    $trigger = implode(':', [
+                        $namespace,
+                        $post['type'],
+                        $type['key'],
+                    ]);
+
+                    // The function
+                    $function = '@shortcode-'.$trigger;
+                    
+                    // Add new shortcode
+                    $shortcodes = array_merge($shortcodes, [$function => $trigger]);
+                }
+            }
+
+            // Update the shortcode config of Core
+            $this->kernel->getCore()->updateConfig('shortcodes', $shortcodes);
+        }
+
+        /**
          * Define Makes this post type available for selection in navigation menus
          * 
          * @param array $post
@@ -1585,314 +1652,16 @@ if (!class_exists('Register\Posts'))
         }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        /**
-         * ----------------------------------------
-         * Post Config Getter / Setter
-         * ----------------------------------------
-         */
-        /**
-         * Type
-         */
-        // private function getType(string $key)
-        // {
-        //     if (isset($this->types[$key]))
-        //     {
-        //         return $this->types[$key];
-        //     }
-
-        //     return null;
-        // }
-
-
-
-
-        /**
-         * ----------------------------------------
-         * Checking and Default Post Params
-         * ----------------------------------------
-         */
-
-        /**
-         * Create the shortcode of the Type
-         */
-        private function setShortcodes(array $post)
-        {
-            $types = array();
-            
-            if (isset($post['schema']))
-            {
-                $types = $post['schema'];
-            }
-
-            // Shortcode for _wp_nonce for posttype
-            array_push($types,[
-                'key' => '_nonce',
-                'shortcode' => true
-            ]);
-
-            // Shortcode for Post Config
-            $name = implode(':', [
-                $this->bs->getNamespace(),
-                '_posts',
-            ]);
-            add_shortcode($name, function(){
-                return json_encode($this->getPosts());
-            });
-
-            // Shortcodes for declared Types
-            foreach ($types as $type) 
-            {
-                if (isset($type['shortcode']) && is_bool($type['shortcode']) && $type['shortcode'])
-                {
-                    // Shortcode Name
-                    $name = implode(':', [
-                        $this->bs->getNamespace(),
-                        $post['type'],
-                        $type['key'],
-                    ]);
-
-                    add_shortcode($name, [$this, 'shortcodeCallback']);
-                }
-            }
-        }
-        public function shortcodeCallback($attrs, $content = "", $tag)
-        {
-            // ReDefine each element of Shortcode Tag Name
-            list($namespace, $posttype, $key) = explode(":", $tag);
-            
-            // WP Nonce
-            if ('_nonce' === $key)
-            {
-                wp_nonce_field($posttype, $posttype.'[nonce]');
-                echo '<input type="hidden" name="post_type" value="'.$posttype.'">';
-            }
-
-            // Custom post fields
-            else
-            {
-                // Retrieve the Type Setiings
-                $types = $this->getTypes();
-                $type = null;
-    
-                if (isset($types[$posttype][$key]))
-                {
-                    $type = $types[$posttype][$key];
-                }
-    
-                if (null != $type)
-                {
-                    // Rebuild $attrs 
-                    if (is_array($attrs))
-                    {
-                        foreach ($attrs as $key => $value) 
-                        {
-                            switch ($key) 
-                            {
-                                case 'default':
-                                case 'label':
-                                case 'helper':
-                                case 'preview':
-                                case 'expanded':
-                                    $type[$key] = $value;
-                                    break;
-            
-                                case 'id':
-                                case 'required':
-                                case 'readonly':
-                                case 'disabled':
-                                case 'class':
-                                case 'placeholder':
-                                case 'maxlength':
-                                case 'step':
-                                case 'max':
-                                case 'min':
-                                case 'width':
-                                case 'cols':
-                                case 'rows':
-                                case 'multiple':
-                                    $type['attr'][$key] = $value;
-                                    break;
-            
-                                case 'pattern':
-                                case 'regex':
-                                    $type['rules'][$key] = $value;
-                                    break;
-                                
-                                default:
-                                    $value = parse_url($value);
-            
-                                    if (isset($value['query']))
-                                    {
-                                        parse_str($value['query'], $output);
-            
-                                        if (isset($type['key']))
-                                        {
-                                            $type[$key] = array_merge($type[$key], $output);
-                                        }
-                                        else 
-                                        {
-                                            $type[$key] = $output;
-                                        }
-                                    }
-            
-                                    elseif (isset($value['path']))
-                                    {
-                                        $type[$key] = $value['path'];
-                                    }
-                                    break;
-                            }
-                        }
-                    }
-        
-                    $type['post_type'] = $posttype;
-                    $type['namespace'] = $namespace;
-        
-                    $typeClass = ucfirst(strtolower($type['type']));
-                    $typeClass = "\\\Components\\Form\\Types\\".$typeClass;
-        
-                    $typeInstance = new $typeClass($type, '');
-                    echo $typeInstance->render();
-                }
-            }
-
-        }
-
-
-        /**
-         * Verify the validity of the Name of a custom post
-         * 
-         * @param array $post
-         * @return bool
-         */
-        private function isValidLabel(array $post)
-        {
-            // Default $label
-            $label = null;
-
-            // Default Is Valid (true)
-            $isValid = true;
-
-            // Default error message
-            $errorMessage = null;
-
-            // Retrieve the label
-            if (isset($post['name']) && is_string($post['name'])) {
-                $label = $post['name'];
-            }
-
-            // Define error if $type is empty
-            if (empty($label)) {
-                $isValid = false;
-                $errorMessage = "<strong>Invalid Post Name</strong> : The post name can't be empty.";
-            }
-
-            // Set error
-            if (!$isValid) 
-            {
-                trigger_error($errorMessage, E_USER_WARNING);
-            }
-
-            return $isValid;
-        }
-
-
         /**
          * ----------------------------------------
          * Posts Actions / Hooks
          * ----------------------------------------
          */
 
-        /**
-         * 
-         */
-        public function pre_get_posts($query)
-        {
-            if (is_admin())
-            {
-                // // $query->set('posts_per_archive_page', '5');
-                // $query->set('posts_per_page', '5');
-                // // $query->set('paged', 10);
-
-                // // $limit = 5;
-                // // set_query_var('posts_per_archive_page', $limit);
-
-
-                // echo "<pre style=\"padding-left: 180px;\">";
-                // print_r($query->get('posts_per_page'));
-                // echo "</pre>";
-                // echo "<pre style=\"padding-left: 180px;\">";
-                // var_dump($query->get('paged'));
-                // echo "</pre>";
-            }
-        }
-
         // -- Admin Columns
 
         /**
-         * 
+         * Define Columns of Admin Post Index
          */
         public function manage_posts_columns($columns, array $post)
         {
@@ -1960,7 +1729,7 @@ if (!class_exists('Register\Posts'))
         }
 
         /**
-         * 
+         * Define Data to display on columns
          */
         public function manage_posts_custom_column(string $column, int $id, array $post)
         {
@@ -2036,7 +1805,7 @@ if (!class_exists('Register\Posts'))
         }
 
         /**
-         * 
+         * Define if Columns are sortable
          */
         public function manage_sortable_columns($columns, array $post)
         {
@@ -2135,6 +1904,165 @@ if (!class_exists('Register\Posts'))
             return $actions;
         }
 
+        
+        // -- Misc Options
+
+        public function screen_options_show_screen( array $post )
+        {
+            $screen_options_tab = true;
+
+            switch (basename($_SERVER['SCRIPT_FILENAME']))
+            {
+                case 'edit.php':
+                    if (isset($post['ui']['pages']['index']['options']['screen_options']) && is_bool($post['ui']['pages']['index']['options']['screen_options']))
+                    {
+                        $screen_options_tab = $post['ui']['pages']['index']['options']['screen_options'];
+                    }
+                    break;
+
+                case 'post.php':
+                case 'post-new.php':
+                    if (isset($post['ui']['pages']['edit']['options']['screen_options']) && is_bool($post['ui']['pages']['edit']['options']['screen_options']))
+                    {
+                        $screen_options_tab = $post['ui']['pages']['edit']['options']['screen_options'];
+                    }
+                    break;
+            }
+
+            return $screen_options_tab;
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        // /**
+        //  * Verify the validity of the Name of a custom post
+        //  * 
+        //  * @param array $post
+        //  * @return bool
+        //  */
+        // private function isValidLabel(array $post)
+        // {
+        //     // Default $label
+        //     $label = null;
+
+        //     // Default Is Valid (true)
+        //     $isValid = true;
+
+        //     // Default error message
+        //     $errorMessage = null;
+
+        //     // Retrieve the label
+        //     if (isset($post['name']) && is_string($post['name'])) {
+        //         $label = $post['name'];
+        //     }
+
+        //     // Define error if $type is empty
+        //     if (empty($label)) {
+        //         $isValid = false;
+        //         $errorMessage = "<strong>Invalid Post Name</strong> : The post name can't be empty.";
+        //     }
+
+        //     // Set error
+        //     if (!$isValid) 
+        //     {
+        //         trigger_error($errorMessage, E_USER_WARNING);
+        //     }
+
+        //     return $isValid;
+        // }
+
+
+        /**
+         * ----------------------------------------
+         * Posts Actions / Hooks
+         * ----------------------------------------
+         */
+
+        /**
+         * 
+         */
+        public function pre_get_posts($query)
+        {
+            if (is_admin())
+            {
+                // // $query->set('posts_per_archive_page', '5');
+                // $query->set('posts_per_page', '5');
+                // // $query->set('paged', 10);
+
+                // // $limit = 5;
+                // // set_query_var('posts_per_archive_page', $limit);
+
+
+                // echo "<pre style=\"padding-left: 180px;\">";
+                // print_r($query->get('posts_per_page'));
+                // echo "</pre>";
+                // echo "<pre style=\"padding-left: 180px;\">";
+                // var_dump($query->get('paged'));
+                // echo "</pre>";
+            }
+        }
+
         // -- Post Submission
 
         /**
@@ -2156,8 +2084,9 @@ if (!class_exists('Register\Posts'))
             }
             else 
             {
-                header('Location: '.get_edit_post_link($_PID, 'redirect'));
-                exit;
+                $this->request->redirect( get_edit_post_link($_PID, 'redirect') );
+                // header('Location: '.get_edit_post_link($_PID, 'redirect'));
+                // exit;
             }
         }
 
@@ -2446,33 +2375,6 @@ if (!class_exists('Register\Posts'))
     
             $notices = new Notices($this->bs->getNamespace());
             $notices->clear();
-        }
-
-        // -- Post Screens
-
-        public function screen_options_show_screen( array $post )
-        {
-            $screen_options_tab = true;
-
-            switch (basename($_SERVER['SCRIPT_FILENAME']))
-            {
-                case 'edit.php':
-                    if (isset($post['ui']['pages']['index']['options']['screen_options']) && is_bool($post['ui']['pages']['index']['options']['screen_options']))
-                    {
-                        $screen_options_tab = $post['ui']['pages']['index']['options']['screen_options'];
-                    }
-                    break;
-
-                case 'post.php':
-                case 'post-new.php':
-                    if (isset($post['ui']['pages']['edit']['options']['screen_options']) && is_bool($post['ui']['pages']['edit']['options']['screen_options']))
-                    {
-                        $screen_options_tab = $post['ui']['pages']['edit']['options']['screen_options'];
-                    }
-                    break;
-            }
-
-            return $screen_options_tab;
         }
     }
 }
