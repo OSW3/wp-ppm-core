@@ -17,13 +17,8 @@ if (!class_exists('Components\Form\Types\Range'))
     class Range extends Types 
     {
         /**
-         * Tag Attributes
+         * Define attributes of the tag
          */
-        public function attributes()
-        {
-            // TODO: List
-            // TODO: Dirname
-            return ['type', 'id', 'name', 'class', 'value', 'autofocus', 'disabled', 'max', 'min', 'readonly', 'required'];
-        }
+        const ATTRIBUTES = ['type', 'id', 'name', 'class', 'value', 'autofocus', 'disabled', 'max', 'min', 'readonly', 'required'];
     }
 }

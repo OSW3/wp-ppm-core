@@ -17,17 +17,14 @@ if (!class_exists('Components\Form\Types\Output'))
     class Output extends Types 
     {
         /**
-         * Tag Attributes
+         * Define attributes of the tag
          */
-        public function attributes()
-        {
-            return ['id', 'name', 'class', 'value', 'disabled', 'required'];
-        }
+        const ATTRIBUTES = ['id', 'name', 'class', 'value', 'disabled', 'required'];
 
         /**
-         * Tag Template
+         * Override tag pattern
          */
-        public function tag()
+        protected function tag()
         {
             return '<output{{attributes}}></output>';
         }
@@ -35,7 +32,7 @@ if (!class_exists('Components\Form\Types\Output'))
         /**
          * Override Attr Value
          */
-        public function getAttrValue()
+        protected function getAttrValue()
         {
             return $this->getValue() ? ' for="'.$this->getValue().'"' : null;
         }

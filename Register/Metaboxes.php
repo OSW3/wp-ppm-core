@@ -11,6 +11,7 @@ if (!defined('WPINC'))
 }
 
 use \Kernel\Request;
+use \Components\Form\Types;
 use \Components\Utils\Arrays;
 use \Components\Utils\Misc;
 
@@ -46,6 +47,11 @@ if (!class_exists('Register\Metaboxes'))
         private $definition;
 
         /**
+         * Plugin namespace
+         */
+        private $namespace;
+
+        /**
          * Metaboxes Options 
          */
         private $options;
@@ -70,12 +76,12 @@ if (!class_exists('Register\Metaboxes'))
         /**
          * Constructor
          */
-        public function __construct(array $post)
-        // public function __construct(array $post, string $namespace)
+        public function __construct(array $post, string $namespace)
         {
             // Request data
             $this->request = new Request;
-            // $this->namespace = $namespace;
+            
+            $this->namespace = $namespace;
 
             // Retrieve the array Post data
             $this->setPost($post);
@@ -466,18 +472,22 @@ if (!class_exists('Register\Metaboxes'))
             $content.= '<table class="form-table">';
             $content.= '<tbody>';
 
-            foreach ($this->getPost('schema') as $type) 
+            foreach ($metabox['schema'] as $key) 
             {
-                if( Arrays::inArray($metabox['schema'], $type['key']) )
+                foreach ($this->getPost('schema') as $type) 
                 {
-                    $type['post_type'] = $metabox['post_type'];
-                    // $type['namespace'] = $this->namespace;
-
-                    $classname = ucfirst(strtolower($type['type']));
-                    $classname = '\\Components\\Form\\Types\\'.$classname;
-                    
-                    $type = new $classname($type, 'metabox');
-                    $content.= $type->render();
+                    if ($type['key'] === $key && in_array($type['type'], Types::ALLOWED))
+                    {
+                        $type['_posttype'] = $metabox['post_type'];
+                        $type['_namespace'] = $this->namespace;
+    
+                        $classname = ucfirst(strtolower($type['type']));
+                        $classname = '\\Components\\Form\\Types\\'.$classname;
+                        
+                        $type = new $classname($type, 'metabox');
+                        $content.= $type->render();
+                        continue;
+                    }
                 }
             }
 

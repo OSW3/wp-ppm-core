@@ -18,20 +18,38 @@ if (!class_exists('Components\Form\Types\Collection'))
     class Collection extends Types 
     {
         /**
+         * Define attributes of the tag
+         */
+        const ATTRIBUTES = ['id', 'name', 'class'];
+
+        /**
          * List of collection items (on load)
          */
         private $items = [];
 
         /**
-         * Tag Attributes
+         * Override tag pattern
          */
-        public function attributes()
+        public function tag()
         {
-            return ['id', 'name', 'class'];
+            $tag = '<div class="ppm-collection" data-ppm-collection="'.$this->getId().'" data-role="collection" data-min="'.$this->getLoop().'">';
+
+            // Collection container
+            $tag.= $this->container();
+
+            // Button Add item
+            $tag.= $this->button();
+
+            // Item prototype
+            $tag.= $this->prototype();
+
+            $tag.= '</div>';
+            
+            return $tag;
         }
 
         /**
-         * Field Builder
+         * Override defaults parameters
          */
         public function builder()
         {
@@ -40,6 +58,9 @@ if (!class_exists('Components\Form\Types\Collection'))
             $this->setLoop();
             $this->setItems();
         }
+
+
+        
 
         /**
          * Items
@@ -150,27 +171,6 @@ if (!class_exists('Components\Form\Types\Collection'))
             $item['_VPOST_ID']  = null;
 
             return $item;
-        }
-
-        /**
-         * Tag Template
-         */
-        public function tag()
-        {
-            $tag = '<div class="ppm-collection" data-ppm-collection="'.$this->getId().'" data-role="collection" data-min="'.$this->getLoop().'">';
-
-            // Collection container
-            $tag.= $this->container();
-
-            // Button Add item
-            $tag.= $this->button();
-
-            // Item prototype
-            $tag.= $this->prototype();
-
-            $tag.= '</div>';
-            
-            return $tag;
         }
 
         /**

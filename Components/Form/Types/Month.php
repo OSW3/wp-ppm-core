@@ -17,21 +17,17 @@ if (!class_exists('Components\Form\Types\Month'))
     class Month extends Types 
     {
         /**
-         * Tag Attributes
+         * Define attributes of the tag
          */
-        public function attributes()
-        {
-            // TODO: List
-            // TODO: Step
-            return ['type', 'id', 'name', 'class', 'value', 'list', 'disabled', 'max', 'min', 'readonly', 'required', 'step'];
-        }
+        // TODO: Step
+        const ATTRIBUTES = ['type', 'id', 'name', 'class', 'value', 'list', 'disabled', 'max', 'min', 'readonly', 'required', 'step'];
 
-
-// <input type="month" name="thedate" min="2018-03" list="date">
-
-// <datalist id="dates">
-//     <option value="1982-03">
-//     <option value="1982-04">
-// </datalist>
+        
+        // <input type="month" name="thedate" min="2018-03" list="date">
+        
+        // <datalist id="dates">
+        //     <option value="1982-03">
+        //     <option value="1982-04">
+        // </datalist>
     }
 }

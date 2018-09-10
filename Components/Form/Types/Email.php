@@ -17,14 +17,9 @@ if (!class_exists('Components\Form\Types\Email'))
     class Email extends Types 
     {
         /**
-         * Tag Attributes
+         * Define attributes of the tag
          */
-        public function attributes()
-        {
-            // TODO: List
-            // TODO: Dirname
-            // TODO: Pattern
-            return ['type', 'id', 'name', 'class', 'value', 'autocomplete', 'autofocus', 'disabled', 'maxlength', 'placeholder', 'readonly', 'required', 'size'];
-        }
+        // TODO: Pattern
+        const ATTRIBUTES = ['type', 'id', 'name', 'class', 'value', 'list', 'autocomplete', 'autofocus', 'disabled', 'maxlength', 'placeholder', 'readonly', 'required', 'size', 'dirname'];
     }
 }

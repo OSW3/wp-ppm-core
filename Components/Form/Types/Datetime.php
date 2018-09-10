@@ -17,30 +17,24 @@ if (!class_exists('Components\Form\Types\Datetime'))
     class Datetime extends Types 
     {
         /**
-         * Tag Attributes
+         * Define attributes of the tag
          */
-        public function attributes()
-        {
-            // TODO: List
-            // TODO: Step
-            return ['type', 'id', 'name', 'class', 'value', 'list', 'disabled', 'max', 'min', 'readonly', 'required', 'step'];
-        }
+        // TODO: Step
+        const ATTRIBUTES = ['type', 'id', 'name', 'class', 'value', 'list', 'list', 'disabled', 'max', 'min', 'readonly', 'required', 'step'];
+
+        // <input type="datetime-local" name="thedate" min="2018-08-10T03:23" list="dates">
+        
+        // <datalist id="dates">
+        //     <option value="1985-09-10T22:30">
+        //     <option value="1982-03-15T23:10">
+        // </datalist>
         
         /**
-         * Field Builder
+         * Override defaults parameters
          */
         public function builder()
         {
             $this->setType('datetime-local');
         }
-
-
-
-// <input type="datetime-local" name="thedate" min="2018-08-10T03:23" list="dates">
-
-// <datalist id="dates">
-//     <option value="1985-09-10T22:30">
-//     <option value="1982-03-15T23:10">
-// </datalist>
     }
 }

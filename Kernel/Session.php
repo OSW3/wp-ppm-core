@@ -46,7 +46,7 @@ if (!class_exists('Kernel\Session'))
          */
         private function start()
         {
-            if (empty(session_id()))
+            if (!headers_sent() && empty(session_id()))
             {
                 session_start();
             }

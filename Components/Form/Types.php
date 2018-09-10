@@ -11,7 +11,9 @@ if (!defined('WPINC'))
 }
 
 // use \Kernel\Config;
-// use \Kernel\Session;
+use \Components\Utils\Misc;
+use \Components\Utils\Strings;
+use \Kernel\Session;
 
 if (!class_exists('Components\Form\Types'))
 {
@@ -20,239 +22,385 @@ if (!class_exists('Components\Form\Types'))
         /**
          * List of allowed Types
          */
-        const ALLOWED = ['checkbox','choices','collection','color','date',
-            'datetime','email','file','hidden','month','number','option',
-            'output','password','radio','range','captcha','search','tel',
-            'text','textarea','time','url','week','wysiwyg','year'];
+        const ALLOWED = [ 'checkbox', 'choices', 'collection', 'color', 'date', 'datetime', 'email', 'file', 'hidden', 'month', 'number', 'option', 'output', 'password', 'radio', 'range', 'captcha', 'search', 'tel', 'text', 'textarea', 'time', 'url', 'week', 'wysiwyg', 'year' ];
+
+        /**
+         * Define default attributes of the tag
+         */
+        const ATTRIBUTES = ['type', 'id', 'name', 'class', 'value', 'readonly', 'disabled', 'required'];
         
         /**
-         * Field Accept
+         * Attribute Accept
+         * 
+         * @param string|array
          */
         private $accept;
 
         /**
-         * Autocomplete attribute
+         * Attributes definition
+         * 
+         * @param array
+         */
+        private $attrs;
+
+        /**
+         * Attriblute Autocomplete
+         * 
+         * @param boolean
          */
         private $autocomplete;
 
         /**
+         * Attriblute Autofocus
          * 
+         * @param boolean
          */
         private $autofocus;
-
-        /**
-         * Field Algo
-         */
-        private $algo;
-
-        /**
-         * Field Attrs
-         */
-        private $attrs;
         
         /**
+         * Choices definition
          * 
+         * @param array
          */ 
         private $choices;
         
         /**
+         * Attribute Class
          * 
+         * @param string
          */ 
         private $class;
         
         /**
+         * Attribute Cols
          * 
+         * @param integer
          */ 
         private $cols;
-        
-        /**
-         * Field config
-         */
-        protected $config;
 
         /**
+         * Attribute Disabled
          * 
+         * @param boolean
          */ 
         private $disabled;
+
+        /**
+         * Attribute Dirnmae
+         * 
+         * @param boolean
+         */ 
+        private $dirname;
+
+        /**
+         * Formated definition
+         * 
+         * @param array
+         */
+        protected $definition;
         
         /**
+         * To define if Choices appear like <select> or checkbox or radio
          * 
+         * @param boolean
          */ 
         private $expanded;
         
         /**
+         * Helper definition
          * 
+         * @param array
          */ 
         private $helper;
         
         /**
+         * Attribute ID
          * 
+         * @param string
          */ 
         private $id;
         
         /**
+         * Value for the tag <label>
          * 
+         * @param string
          */ 
         private $label;
         
         /**
-         * Number of loop on collection init
+         * Attribute List
+         * 
+         * @param string
          */ 
-        private $loop;
+        private $list;
         
         /**
+         * Attribute Max
          * 
+         * @param integer
          */ 
         private $max;
         
         /**
+         * Attribute MaxLength
          * 
+         * @param integer
          */ 
         private $maxLength;
         
         /**
+         * Attribute Min
          * 
+         * @param integer
          */ 
         private $min;
         
         /**
+         * Attribute Multiple
          * 
+         * @param boolean
          */ 
         private $multiple;
         
         /**
+         * Attribute Name
          * 
+         * @param string
          */ 
         private $name;
+
+        /**
+         * Plugin namespace
+         * 
+         * @param string
+         */
+        private $namespace;
         
         /**
+         * Attribute Pattern
          * 
+         * @param RegExp
+         */ 
+        private $pattern;
+        
+        /**
+         * Attribute Placeholder
+         * 
+         * @param string
          */ 
         private $placeholder;
+
+        /**
+         * Custom Post Type
+         * 
+         * @param string
+         */
+        private $posttype;
         
         /**
+         * To define if File have a preview
          * 
+         * @param boolean
+         */ 
+        private $preview;
+        
+        /**
+         * Attribute Readonly
+         * 
+         * @param boolean
          */ 
         private $readonly;
+
+        /**
+         * Render Pattern name
+         * 
+         * @param string
+         */
+        private $renderPattern;
         
         /**
+         * Attribute Required
          * 
+         * @param boolean
          */ 
         private $required;
         
         /**
+         * Attribute Rows
          * 
+         * @param integer
          */ 
         private $rows;
         
         /**
+         * Rules definition
          * 
+         * @param array
          */ 
         private $rules;
-        
-        /**
-         * 
-         */ 
-        private $selected;
 
         /**
+         * Session
          * 
+         * @param object Instance of Session
          */
-        protected $session;
+        private $session;
         
         /**
-         * Schema for collection Type
-         */ 
-        private $schema;
-        
-        /**
+         * Attribute size
          * 
+         * @param integer
          */ 
         private $size;
         
         /**
+         * Attribute Step
          * 
+         * @param integer|float|double
          */ 
         private $step;
-
-        /**
-         * 
-         */
-        private $template;
-
-        /**
-         * 
-         */
-        private $template_type;
         
         /**
+         * The type of Typefield
          * 
+         * @param string
          */ 
         private $type;
         
         /**
+         * Attribute Value
          * 
+         * @param string
          */ 
         private $value;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        // /**
+        //  * Field Algo
+        //  */
+        // private $algo;
         
-        /**
-         * 
-         */ 
-        private $width;
+        // /**
+        //  * Field config
+        //  */
+        // protected $config;
+        
+        // /**
+        //  * Number of loop on collection init
+        //  */ 
+        // private $loop;
+        
+        // /**
+        //  * 
+        //  */ 
+        // private $selected;
+        
+        // /**
+        //  * Schema for collection Type
+        //  */ 
+        // private $schema;
+
+        // /**
+        //  * 
+        //  */
+        // private $template;
+        
+        // /**
+        //  * 
+        //  */ 
+        // private $width;
+
+
+
+
+
+
+
+
 
         /**
          * Constructor
          * 
-         * @param array $config
-         * @param string $template, the type of field template ('metabox' | 'collection')
+         * @param array $type, the type
+         * @param string $renderPattern, the type of field template ('metabox' | 'collection')
          */
-        public function __construct(array $config, string $template_type = null)
+        public function __construct(array $type, string $renderPattern = '')
         {
-            // $this->template_type = $template_type;
+            // Set the Render Pattern name
+            $this->renderPattern = $renderPattern;
 
-            // // define Field Type
-            // $this->setConfig($config);
+            // Type definition
+            $this->setDefinition($type);
 
-            // // 
-            // $this->session = new Session($this->getConfig('namespace'));
+            // Retrieve the Plugin Namespace
+            $this->setNamespace();
 
-            // // Init the Label
-            // $this->setLabel();
+            // Retrive the Post Type
+            $this->setPosttype();
 
-            // // Init the Helper
-            // $this->setHelper();
+            // Init Session
+            $this->setSession();
 
-            // // Call setter methods
-            // foreach ($this->attributes() as $attribute) 
-            // {
-            //     $attribute = strtolower($attribute);
-            //     $attribute = ucfirst($attribute);
-            //     $method = 'set'.$attribute;
-            //     $this->$method();
-            // }
+            // Init the Label
+            $this->setLabel();
 
-            // // Build the field
-            // $this->builder();
+            // Init the Helper
+            $this->setHelper();
+
+            // Attributes definition
+            $this->setAttrs();
+
+            // Rules definition
+            $this->setRules();
+
+            // Define Attributes
+            foreach (static::ATTRIBUTES as $attribute) 
+            {
+                $method = 'set'.Strings::ucfirst($attribute);
+                $this->$method();
+            }
+
+            // Build the field
+            $this->builder();
 
             // do_action('admin_head');
         }
 
         /**
-         * Default Field Builder
+         * ----------------------------------------
+         * Config
+         * ----------------------------------------
          */
-        public function builder() {}
 
         /**
-         * Render
+         * Default Builder
          * 
-         * Rendering the field
+         * Use to reset / redefine some parameters
+         */
+        protected function builder() {}
+
+        /**
+         * Render the HTLM field
          */
         public function render()
         {
             // Init the Output
             $output = '';
 
-            switch ($this->template_type) 
+            switch ($this->renderPattern) 
             {
                 case 'collection':
                 case 'metabox':
@@ -261,7 +409,7 @@ if (!class_exists('Components\Form\Types'))
                     $output.= $this->tagLabel();
                     $output.= '</th>';
                     $output.= '<td>';
-                    $output.= $this->tagTemplate();
+                    $output.= $this->tagRender();
                     $output.= $this->tagHelper();
                     $output.= '</td>';
                     $output.= '</tr>';
@@ -275,11 +423,11 @@ if (!class_exists('Components\Form\Types'))
                  * <label>label</label> <input type="text">
                  */
                 default:
-                    if (!in_array($this->getType(), ['checkbox', 'radio']))
+                    if (!in_array(Misc::get_called_class_name(get_called_class()), ['checkbox', 'radio']))
                     {
                         $output.= $this->tagLabel();
                     }
-                    $output.= $this->tagTemplate();
+                    $output.= $this->tagRender();
                     $output.= $this->tagHelper();
                     break;
             }
@@ -290,156 +438,51 @@ if (!class_exists('Components\Form\Types'))
 
         /**
          * ----------------------------------------
-         * Tag templates
+         * Type & Config Definition
          * ----------------------------------------
          */
 
         /**
-         * Tag Template
+         * Definition
          */
-        public function tag()
+        private function setDefinition(array $type)
         {
-            return $this->tagInput();
-        }
+            // Default definition
+            $definition = array();
 
-        /**
-         * Default Tag
-         */
-        public function tagInput()
-        {
-            return '<input{{attributes}} />';
-        }
-
-        /**
-         * Default Attributes list
-         */
-        public function attributes() 
-        {
-            return ['type', 'id', 'name', 'value', 'class', 'disabled', 'required', 'readonly'];
-        }
-
-        /**
-         * Label
-         */
-        public function tagLabel()
-        {
-            $tag = '<label$1>$2$3</label>';
-
-            if (!empty($this->getId())) { 
-                $tag = preg_replace("/\\$1/", ' for="'.$this->getId().'"', $tag);
-            }
-
-            if (!empty($this->getLabel())) {
-                $tag = preg_replace("/\\$2/", $this->getLabel(), $tag);
-            }
-
-            if ($this->getRequired()) { 
-                $tag = preg_replace("/\\$3/", ' <span>*</span>', $tag);
-            }
-
-            $tag = preg_replace("/(:?\\$1|\\$2|\\$3)/", null, $tag);
-
-            return $tag;
-        }
-
-        /**
-         * Helper
-         */
-        public function tagHelper()
-        {
-            $tag = null;
-
-            if (!empty($this->getHelper()))
+            if (!empty($type))
             {
-                $helper = $this->getHelper();
-
-                if (!is_array($helper)) {
-                    $helper = [$helper];
-                }
-
-                foreach ($helper as $item) 
-                {
-                    if ('notice' == $item[0]) {
-                        $tag.= '<p class="description ppm-description has-error">' . $item[1] . '</p>';
-                    } else {
-                        $tag.= '<p class="description ppm-description">' . $item[1] . '</p>';
-                    }
-                }
+                $definition = $type;
             }
 
-            return $tag;
-        }
-
-        public function tagAttributes()
-        {
-            $attr = '';
-
-            foreach ($this->attributes() as $attribute) 
-            {
-                $attribute = strtolower($attribute);
-                $attribute = ucfirst($attribute);
-                $method = 'getAttr'.$attribute;
-                $attr.= $this->$method();
-            }
-
-            return $attr;
-        }
-
-        /**
-         * 
-         */
-        protected function tagTemplate()
-        {
-            return preg_replace(
-                "/{{attributes}}/", 
-                $this->tagAttributes(), 
-                $this->tag()
-            );
-        }
-
-
-        /**
-         * ----------------------------------------
-         * Retrieve Attribute and config options from config.php
-         * ----------------------------------------
-         */
-
-        /**
-         * Config from config.php
-         */
-        private function setConfig(array $config)
-        {
-            $this->config = $config;
-
-            $this->setAttrs();
-            $this->setRules();
+            // Set Definition
+            $this->definition = $definition;
 
             return $this;
         }
-        protected function getConfig(string $key = '')
+        protected function getDefinition(string $key = '')
         {
-            if (isset( $this->config[$key] )) 
+            if (!empty($key) && isset($this->definition[$key]))
             {
-                return $this->config[$key];
+                return $this->definition[$key];
             }
 
             return null;
         }
 
         /**
-         * Attributes from this->getConfig()
+         * Attribute definition
          */
         private function setAttrs()
         {
-            // Default Attrs
-            $this->attrs = array();
+            $attrs = $this->getDefinition('attr');
 
-            $config = $this->config;
-
-            if (isset($config['attr']) && is_array($config['attr']))
+            if ($attrs == null)
             {
-                $this->attrs = $config['attr'];
+                $attrs = array();
             }
+
+            $this->attrs = $attrs;
 
             return $this;
         }
@@ -454,19 +497,18 @@ if (!class_exists('Components\Form\Types'))
         }
 
         /**
-         * Rules from this->getConfig()
+         * Rules definition
          */
         private function setRules()
         {
-            // Default Attrs
-            $this->rules = array();
+            $rules = $this->getDefinition('rules');
 
-            $config = $this->config;
-
-            if (isset($config['rules']) && is_array($config['rules']))
+            if ($rules == null)
             {
-                $this->rules = $config['rules'];
+                $rules = array();
             }
+
+            $this->rules = $rules;
 
             return $this;
         }
@@ -480,10 +522,130 @@ if (!class_exists('Components\Form\Types'))
             return null;
         }
 
+        /**
+         * Plugin Namespace
+         */
+        private function setNamespace()
+        {
+            $this->namespace = $this->getDefinition('_namespace');
+
+            return $this;
+        }
+        private function getNamespace()
+        {
+            return $this->namespace;
+        }
+
+        /**
+         * Plugin Posttype
+         */
+        private function setPosttype()
+        {
+            $this->posttype = $this->getDefinition('_posttype');
+
+            return $this;
+        }
+        private function getPosttype()
+        {
+            return $this->posttype;
+        }
+
+        /**
+         * Session Instance
+         */
+        private function setSession()
+        {
+            $this->session = new Session($this->getNamespace());
+
+            return $this;
+        }
+        public function getSession()
+        {
+            return $this->session;
+        }
 
         /**
          * ----------------------------------------
-         * Options and Attribute Getters / Setters
+         * Tags Definition (label, helper, ...)
+         * ----------------------------------------
+         */
+
+        /**
+         * Default Tag pattern
+         */
+        protected function tag()
+        {
+            return $this->tagInput();
+        }
+
+        /**
+         * Get the string of attributes of a tag
+         */
+        private function attributes()
+        {
+            $attr = '';
+
+            foreach (static::ATTRIBUTES as $attribute) 
+            {
+                $method = 'getAttr'.Strings::ucfirst($attribute);
+
+                $attr.= $this->$method();
+            }
+
+            return $attr;
+        }
+
+        /**
+         * Tag rendering
+         */
+        public function tagRender()
+        {
+            return preg_replace("/{attributes}/", $this->attributes(), $this->tag());
+        }
+
+        /**
+         * Default Input
+         */
+        protected function tagInput()
+        {
+            return '<input{attributes} />';
+        }
+
+        /**
+         * Formated tag Helper
+         */
+        private function tagHelper()
+        {
+            return $this->getHelper();
+        }
+
+        /**
+         * Formated tag <label>
+         */
+        private function tagLabel()
+        {
+            $tag = '<label{attributes}>{label}{required}</label>';
+
+            if (!empty($this->getId())) { 
+                $tag = preg_replace("/{attributes}/", ' for="'.$this->getId().'"', $tag);
+            }
+
+            if (!empty($this->getLabel())) {
+                $tag = preg_replace("/{label}/", $this->getLabel(), $tag);
+            }
+
+            if ($this->getRequired()) { 
+                $tag = preg_replace("/{required}/", ' <span>*</span>', $tag);
+            }
+
+            $tag = preg_replace("/{(:?\attributes|label|required)}/", null, $tag);
+
+            return $tag;
+        }
+
+        /**
+         * ----------------------------------------
+         * Attributes Definition
          * ----------------------------------------
          */
 
@@ -575,38 +737,60 @@ if (!class_exists('Components\Form\Types'))
         }
 
         /**
+         * Choices
+         */
+        protected function setChoices(array $choices = [])
+        {
+            $definition = $this->getDefinition('choices');
+
+            if (is_array($definition))
+            {
+                $choices = array_merge($choices, $definition);
+            }
+
+            $this->choices = $choices;
+
+            return $this;
+        }
+        protected function getChoices()
+        {
+            return $this->choices;
+        }
+
+        /**
          * Class
          */
         protected function setClass()
         {
             // Default class
-            $this->class = 'ppm-control';
+            $_class = 'ppm-control';
             
-            if (
-                is_admin() && 
-                ($this->template_type == 'metabox' || $this->template_type == 'collection')&&
-                !in_array($this->getType(), ['color'])
-            ){
-                $this->class.= ' regular-text';
+            if (is_admin())
+            //     ($this->template_type == 'metabox' || $this->template_type == 'collection')&&
+            //     !in_array($this->getType(), ['color'])
+            {
+                $_class.= ' regular-text';
             }
 
-            // Retrieve value from session (after submission)
-            $session = new Session($this->getConfig('namespace'));
-            foreach ($session->errors($this->getConfig('post_type')) as $error) 
-            {
-                if (isset($error['key']) && $error['key'] == $this->getConfig('key')) 
-                {
-                    $this->class.= ' has-error';
-                }
-            }
+            // Add class error
+            // $session = new Session($this->getConfig('namespace'));
+            // foreach ($session->errors($this->getConfig('post_type')) as $error) 
+            // {
+            //     if (isset($error['key']) && $error['key'] == $this->getConfig('key')) 
+            //     {
+            //         $this->class.= ' has-error';
+            //     }
+            // }
 
             // Retrive Class parameters
             $class = $this->getAttr('class');
 
             if (is_string($class))
             {
-                $this->class.= ' '.$class;
+                $_class.= ' '.$class;
             }
+
+            $this->class = trim($_class);
 
             return $this;
         }
@@ -617,29 +801,6 @@ if (!class_exists('Components\Form\Types'))
         protected function getAttrClass()
         {
             return $this->getClass() ? ' class="'.$this->getClass().'"' : null;
-        }
-
-        /**
-         * Choices
-         */
-        protected function setChoices(array $choices=[])
-        {
-            // Default choices
-            $this->choices = $choices;
-
-            // if (!in_array($this->getType(), ['option']))
-            // {
-                if ($this->getConfig('choices'))
-                {
-                    $this->choices = $this->getConfig('choices');
-                }
-            // }
-
-            return $this;
-        }
-        protected function getChoices()
-        {
-            return $this->choices;
         }
 
         /**
@@ -668,7 +829,7 @@ if (!class_exists('Components\Form\Types'))
         {
             return $this->getCols() ? ' cols="'.$this->getCols().'"' : null;
         }
-
+    
         /**
          * Disabled
          */
@@ -695,6 +856,33 @@ if (!class_exists('Components\Form\Types'))
         {
             return $this->getDisabled() ? ' disabled="disabled"' : null;
         }
+    
+        /**
+         * Dirname
+         */
+        protected function setDirname()
+        {
+            // Default readonly
+            $this->dirname = false;
+
+            // Retrive Disabled parameters
+            $dirname = $this->getAttr('dirname');
+
+            if (is_bool($dirname))
+            {
+                $this->dirname = $dirname;
+            }
+
+            return $this;
+        }
+        protected function getDirname()
+        {
+            return $this->dirname;
+        }
+        protected function getAttrDirname()
+        {
+            return $this->getDirname() ? ' dirname="'.$this->getName().'.dir"' : null;
+        }
 
         /**
          * Expanded
@@ -705,7 +893,7 @@ if (!class_exists('Components\Form\Types'))
             $this->expanded = false;
 
             // Retrive Readonly parameters
-            $expanded = $this->getConfig('expanded');
+            $expanded = $this->getDefinition('expanded');
 
             if (is_bool($expanded))
             {
@@ -720,60 +908,79 @@ if (!class_exists('Components\Form\Types'))
         }
 
         /**
-         * Set Helper
+         * Helper
          */
         protected function setHelper()
         {
             // Default helper
             $this->helper = [];
 
-            // Retrieve value from session (after submission)
-            $session = new Session($this->getConfig('namespace'));
-            foreach ($session->errors($this->getConfig('post_type')) as $error) 
-            {
+            // // Retrieve value from session (after submission)
+            // $session = new Session($this->getConfig('namespace'));
+            // foreach ($session->errors($this->getConfig('post_type')) as $error) 
+            // {
 
-                if (isset($error['key']) && $error['key'] == $this->getConfig('key')) 
-                {
-                    array_push($this->helper, ["notice", $error['message']]);
-                }
-            }
+            //     if (isset($error['key']) && $error['key'] == $this->getConfig('key')) 
+            //     {
+            //         array_push($this->helper, ["notice", $error['message']]);
+            //     }
+            // }
 
-            if ($this->getConfig('helper'))
+            // -- Helper defined in config.php
+            $helper = $this->getDefinition('helper');
+
+            if (is_string($helper))
             {
-                array_push($this->helper, ["normal", $this->getConfig('helper')]);
+                array_push($this->helper, ["normal", $helper]);
             }
 
             return $this;
         }
-        protected function getHelper()
+        protected function getHelper(bool $asString = true)
         {
-            return $this->helper;
+            $helper = $this->helper;
+
+            if ($asString)
+            {
+                $helperHTML = '';
+
+                foreach ($helper as $item) 
+                {
+                    if ('notice' == $item[0]) 
+                        $helperHTML.= '<p class="description ppm-description has-error">' . $item[1] . '</p>';
+                    else 
+                        $helperHTML.= '<p class="description ppm-description">' . $item[1] . '</p>';
+                }
+
+                $helper = $helperHTML;
+            }
+
+            return $helper;
         }
 
         /**
          * ID
          */
-        protected function setId($id = null)
+        protected function setId(string $id = '')
         {
+            // Id is defined on config.php
             if (null == $id)
             {
                 $id = $this->getAttr('id');
             }
 
-            if (null != $id) 
+            // Generate id from the config Key
+            if (null == $id)
             {
-                $this->id = $id;
-            }
-            else
-            {
-                $this->id = $this->getConfig('key');
+                $id = $this->getDefinition('key');
             }
 
+            // if ('collection' == $this->template_type)
+            // {
+            //     $id.= '-{{number}}';
+            // }
 
-            if ('collection' == $this->template_type)
-            {
-                $this->id.= '-{{number}}';
-            }
+            $this->id = $id;
 
             return $this;
         }
@@ -789,15 +996,9 @@ if (!class_exists('Components\Form\Types'))
         /**
          * Label
          */
-        protected function setLabel()
+        private function setLabel()
         {
-            // Default label
-            $this->label = '';
-
-            if ($this->getConfig('label'))
-            {
-                $this->label = $this->getConfig('label');
-            }
+            $this->label = $this->getDefinition('label');
 
             return $this;
         }
@@ -808,9 +1009,13 @@ if (!class_exists('Components\Form\Types'))
 
         /**
          * List
+         * 
+         * TODO: generate the List & Datalist
          */
         private function setList()
         {
+            $this->list = null;
+
             return $this;
         }
         private function getList()
@@ -820,31 +1025,6 @@ if (!class_exists('Components\Form\Types'))
         private function getAttrList()
         {
             return "";
-        }
-
-        /**
-         * Loop
-         */
-        protected function setLoop($loop = null)
-        {
-            // default loop value
-            $this->loop = 1;
-
-            if (null === $loop)
-            {
-                $loop = $this->getRule('init');
-            }
-
-            if (is_int($loop) && $loop >= 0 ) 
-            {
-                $this->loop = $loop;
-            }
-
-            return $this;
-        }
-        protected function getLoop()
-        {
-            return $this->loop;
         }
 
         /**
@@ -902,7 +1082,7 @@ if (!class_exists('Components\Form\Types'))
         }
 
         /**
-         * Set Attribute Min
+         * Min
          */
         protected function setMin()
         {
@@ -962,8 +1142,8 @@ if (!class_exists('Components\Form\Types'))
         {
             if (empty($name)) 
             {
-                $name = $this->getConfig('post_type');
-                $name.= '['.$this->getConfig('key').']';
+                $name = $this->getPosttype();
+                $name.= '['.$this->getDefinition('key').']';
             }
 
             $this->name = $name;
@@ -976,7 +1156,8 @@ if (!class_exists('Components\Form\Types'))
         }
         protected function getAttrName()
         {
-            return ' name="'.$this->getName().'"';
+            return $this->getName() ? ' name="'. $this->getName() .'"' : null;
+
         }
 
         /**
@@ -990,13 +1171,8 @@ if (!class_exists('Components\Form\Types'))
             // Retrive pattern parameters
             $pattern = $this->getRule('pattern');
 
-            $track_errors = ini_get('track_errors');
-            ini_set('track_errors', 'on');
-            $php_errormsg = '';
-            @preg_match($pattern, '');
-            ini_set('track_errors', $track_errors);
-            
-            if (is_string($pattern) && empty($php_errormsg))
+            // Check if rule is a Regular Expression
+            if (is_string($pattern) && Strings::isRegEx($pattern))
             {
                 $pattern = substr($pattern, 1, strlen($pattern));
                 $pattern = substr($pattern, 0, strlen($pattern)-1);
@@ -1039,6 +1215,29 @@ if (!class_exists('Components\Form\Types'))
         protected function getAttrPlaceholder()
         {
             return $this->getPlaceholder() ? ' placeholder="'.$this->getPlaceholder().'"' : null;
+        }
+
+        /**
+         * Preview
+         */
+        protected function setPreview()
+        {
+            // Default preview
+            $this->preview = false;
+
+            // Retrive Readonly parameters
+            $preview = $this->getDefinition('preview');
+
+            if (is_bool($preview))
+            {
+                $this->preview = $preview;
+            }
+
+            return $this;
+        }
+        protected function getPreview()
+        {
+            return $this->preview;
         }
 
         /**
@@ -1123,36 +1322,6 @@ if (!class_exists('Components\Form\Types'))
         }
 
         /**
-         * Schema
-         * 
-         * Define schema for Collection Type
-         */
-        protected function setSchema()
-        {
-            // Default Schema
-            $this->schema = [];
-
-            // Retrive Schema parameters
-            $schema = $this->getConfig('schema');
-
-            if (is_string($schema) || is_array($schema))
-            {
-                if (is_string($schema))
-                {
-                    $schema = [$schema];
-                }
-
-                $this->schema = $schema;
-            }
-
-            return $this;
-        }
-        protected function getSchema()
-        {
-            return $this->schema;
-        }
-
-        /**
          * Size
          */
         protected function setSize()
@@ -1176,9 +1345,10 @@ if (!class_exists('Components\Form\Types'))
         }
         protected function getAttrSize()
         {
-            // TODO: Code Injection for <select>
-            // TODO: Code Injection for <input text>
-            // $this->bs->codeInjection('head', "<style>.wp-admin select {height: auto;}</style>");
+            if (in_array($this->getType(), ['select', 'text']))
+            {
+                Misc::injection("<style>.wp-admin select {height: auto;}</style>", "head", "admin");
+            }
 
             return $this->getSize() ? ' size="'.$this->getSize().'"' : null;
         }
@@ -1213,16 +1383,11 @@ if (!class_exists('Components\Form\Types'))
         /**
          * Type
          */
-        protected function setType($type = null)
+        protected function setType(string $type = '')
         {
-            if (null === $type)
+            if (empty($type))
             {
-                $called_class = get_called_class();
-                $called_class = str_replace("\\", "/", $called_class);
-                $called_class = basename($called_class);
-                $called_class = strtolower($called_class);
-
-                $type = $called_class;
+                $type = Misc::get_called_class_name(get_called_class());
             }
 
             $this->type = $type;
@@ -1241,69 +1406,41 @@ if (!class_exists('Components\Form\Types'))
         /**
          * Value
          */
-        protected function setValue($value = null, $post_id = null)
+        protected function setValue($value = null, $postID = null)
         {
             // Retrieve value from session (after submission)
             if (null === $value)
             {
-                $session = new Session($this->getConfig('namespace'));
-                foreach ($session->responses($this->getConfig('post_type')) as $key => $response) 
-                {
-                    if ($key == $this->getConfig('key')) 
-                    {
-                        $value = $response;
-                    }
-                }
+            //     $session = new Session($this->getConfig('namespace'));
+            //     foreach ($session->responses($this->getConfig('post_type')) as $key => $response) 
+            //     {
+            //         if ($key == $this->getConfig('key')) 
+            //         {
+            //             $value = $response;
+            //         }
+            //     }
             }            
 
             // Retrieve response in database
             if (null === $value && !empty(get_post()))
             {
-                if (null == $post_id)
-                {
-                    $post_id = get_post()->ID;
-                }
-                $hide_pwd_value = true;
-                $post_field = $this->getConfig('key');
+                if (null == $postID)
+                    $postID = get_post()->ID;
     
-                $value = get_post_meta($post_id, $post_field, true);
+                $value = get_post_meta($postID, $this->getDefinition('key'), true);
             }
 
+            // Retrieve Value from Config
             if (null == $value) 
             {
-                if ($this->getConfig('value'))
+                $value = $this->getDefinition('default');
+
+                if (is_string($value))
                 {
-                    $value = $this->getConfig('value');
-                    
-                    // if (is_string($value))
-                    // {
-                    //     $value = stripslashes($value);
-                    // }
+                    $value = stripslashes($value);
                 }
             }
-
-            switch ($this->getType()) 
-            {
-                case 'date':
-                    if ('today' == $value) {
-                        $value = date('Y-m-d');
-                    }
-                    break;
-
-                case 'time':
-                    if ('now' == $value) {
-                        $value = date('H:i');
-                    }
-                    break;
-
-                case 'password':
-                    if ($hide_pwd_value)
-                    {
-                        $value = '';
-                    }
-                    break;
-            }
-
+    
             $this->value = $value;
 
             return $this;
@@ -1312,36 +1449,117 @@ if (!class_exists('Components\Form\Types'))
         {
             return $this->value;
         }
-        public function getAttrValue()
+        protected function getAttrValue()
         {
             return $this->getValue() ? ' value="'.$this->getValue().'"' : null;
         }
 
-        /**
-         * Width
-         */
-        protected function setWidth()
-        {
-            // Default Width
-            $this->width = null;
 
-            // Retrive rows parameters
-            $width = $this->getAttr('width');
 
-            if (is_int($width))
-            {
-                $this->width = $width;
-            }
 
-            return $this;
-        }
-        protected function getWidth()
-        {
-            return $this->width;
-        }
-        protected function getAttrWidth()
-        {
-            return $this->getWidth() ? ' width="'.$this->getWidth().'"' : null;
-        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    //     /**
+    //      * ----------------------------------------
+    //      * Options and Attribute Getters / Setters
+    //      * ----------------------------------------
+    //      */
+
+    //     /**
+    //      * Loop
+    //      */
+    //     protected function setLoop($loop = null)
+    //     {
+    //         // default loop value
+    //         $this->loop = 1;
+
+    //         if (null === $loop)
+    //         {
+    //             $loop = $this->getRule('init');
+    //         }
+
+    //         if (is_int($loop) && $loop >= 0 ) 
+    //         {
+    //             $this->loop = $loop;
+    //         }
+
+    //         return $this;
+    //     }
+    //     protected function getLoop()
+    //     {
+    //         return $this->loop;
+    //     }
+
+    //     /**
+    //      * Schema
+    //      * 
+    //      * Define schema for Collection Type
+    //      */
+    //     protected function setSchema()
+    //     {
+    //         // Default Schema
+    //         $this->schema = [];
+
+    //         // Retrive Schema parameters
+    //         $schema = $this->getConfig('schema');
+
+    //         if (is_string($schema) || is_array($schema))
+    //         {
+    //             if (is_string($schema))
+    //             {
+    //                 $schema = [$schema];
+    //             }
+
+    //             $this->schema = $schema;
+    //         }
+
+    //         return $this;
+    //     }
+    //     protected function getSchema()
+    //     {
+    //         return $this->schema;
+    //     }
+
+    //     /**
+    //      * Width
+    //      */
+    //     protected function setWidth()
+    //     {
+    //         // Default Width
+    //         $this->width = null;
+
+    //         // Retrive rows parameters
+    //         $width = $this->getAttr('width');
+
+    //         if (is_int($width))
+    //         {
+    //             $this->width = $width;
+    //         }
+
+    //         return $this;
+    //     }
+    //     protected function getWidth()
+    //     {
+    //         return $this->width;
+    //     }
+    //     protected function getAttrWidth()
+    //     {
+    //         return $this->getWidth() ? ' width="'.$this->getWidth().'"' : null;
+    //     }
     }
 }

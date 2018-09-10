@@ -17,23 +17,13 @@ if (!class_exists('Components\Form\Types\Password'))
     class Password extends Types 
     {
         /**
+         * Define attributes of the tag
+         */
+        const ATTRIBUTES = ['type', 'id', 'name', 'class', 'autofocus', 'disabled', 'maxlength', 'placeholder', 'readonly', 'required', 'size'];
+
+        /**
          * Available Encryption engine
          */
-        const ALGO = [
-            'PASSWORD_BCRYPT','PASSWORD_ARGON2I',
-            'PASSWORD_ARGON2_DEFAULT_MEMORY_COST',
-            'PASSWORD_ARGON2_DEFAULT_TIME_COST',
-            'PASSWORD_ARGON2_DEFAULT_THREADS','PASSWORD_DEFAULT'
-        ];
-        
-        /**
-         * Tag Attributes
-         */
-        public function attributes()
-        {
-            // TODO: Dirname
-            // TODO: Pattern
-            return ['type', 'id', 'name', 'class', 'value', 'autocomplete', 'autofocus', 'disabled', 'maxlength', 'placeholder', 'readonly', 'required', 'size'];
-        }
+        const ALGO = ['PASSWORD_BCRYPT','PASSWORD_ARGON2I', 'PASSWORD_ARGON2_DEFAULT_MEMORY_COST', 'PASSWORD_ARGON2_DEFAULT_TIME_COST', 'PASSWORD_ARGON2_DEFAULT_THREADS','PASSWORD_DEFAULT'];
     }
 }

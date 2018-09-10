@@ -10,33 +10,43 @@ if (!defined('WPINC'))
 	exit;
 }
 
-use \Components\Form\Types\Text;
+use \Components\Form\Types\Choices;
 
 if (!class_exists('Components\Form\Types\Year'))
 {
     class Year extends Choices 
     {
         /**
-         * Tag Attributes
+         * Define attributes of the tag
          */
-        public function attributes()
-        {
-            return ['type', 'id', 'name', 'class', 'value', 'autofocus', 'disabled', 'multiple', 'readonly', 'required', 'size'];
-        }
+        const ATTRIBUTES = ['type', 'id', 'name', 'class', 'value', 'autofocus', 'disabled', 'multiple', 'readonly', 'required', 'size'];
 
         /**
-         * Field Builder
+         * Override defaults parameters
          */
-        public function builder()
+        protected function builder()
         {
             $this->setType('select');
             $this->setChoices($this->choices());
         }
 
+
+
+
+
+
+
+
+
+
+
+        
+
+
         /**
          * Define list of choices dates
          */
-        private function choices()
+        protected function choices()
         {
             // Default dates range
             $default_start = date('Y');

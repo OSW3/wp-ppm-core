@@ -17,19 +17,14 @@ if (!class_exists('Components\Form\Types\Date'))
     class Date extends Types 
     {
         /**
-         * Tag Attributes
+         * Define attributes of the tag
          */
-        public function attributes()
-        {
-            // TODO: List
-            return ['type', 'id', 'name', 'class', 'value', 'list', 'disabled', 'max', 'min', 'readonly', 'required', 'step'];
-        }
-
-// <input type="date" name="thedate" list="dates">
-
-// <datalist id="dates">
-//     <option value="1985-09-10">
-//     <option value="1982-03-15">
-// </datalist>
+        const ATTRIBUTES = ['type', 'id', 'name', 'class', 'value', 'list', 'disabled', 'max', 'min', 'readonly', 'required', 'step'];
+        // <input type="date" name="thedate" list="dates">
+        
+        // <datalist id="dates">
+        //     <option value="1985-09-10">
+        //     <option value="1982-03-15">
+        // </datalist>
     }
 }

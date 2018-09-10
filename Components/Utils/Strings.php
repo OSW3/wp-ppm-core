@@ -15,24 +15,18 @@ if (!class_exists('Components\Utils\Strings'))
 {
 	class Strings
 	{
-		/**
-		 * Slugify
-         * 
-         * @param string $text
-         * @param string $separator
-		 */
-        public static function slugify( $text, $separator="-" )
+        /**
+         * Check if the pattern is a RegExp
+         */
+        public static function isRegEx( $pattern )
         {
-            $text = preg_replace('~[^\pL\d]+~u', $separator, $text);
-            $text = iconv('utf-8', 'us-ascii//TRANSLIT', $text);
-            $text = preg_replace('~[^-\w]+~', '', $text);
-            $text = trim($text, $separator);
-            $text = preg_replace('~-+~', $separator, $text);
-            $text = strtolower($text);
+            $track_errors = ini_get('track_errors');
+            ini_set('track_errors', 'on');
+            $php_errormsg = '';
+            @preg_match($pattern, '');
+            ini_set('track_errors', $track_errors);
 
-            if (empty($text)) return false;
-
-            return $text;
+            return empty($php_errormsg);
         }
 
         /**
@@ -75,6 +69,40 @@ if (!class_exists('Components\Utils\Strings'))
                 }
             }
             return $randomString;
+        }
+
+		/**
+		 * Slugify
+         * 
+         * @param string $text
+         * @param string $separator
+		 */
+        public static function slugify( $text, $separator="-" )
+        {
+            $text = preg_replace('~[^\pL\d]+~u', $separator, $text);
+            $text = iconv('utf-8', 'us-ascii//TRANSLIT', $text);
+            $text = preg_replace('~[^-\w]+~', '', $text);
+            $text = trim($text, $separator);
+            $text = preg_replace('~-+~', $separator, $text);
+            $text = strtolower($text);
+
+            if (empty($text)) return false;
+
+            return $text;
+        }
+
+        /**
+         * @param string $string to ucfirst
+         * @param bool $strict if true, apply atrtolower before ucfirst
+         */
+        public static function ucfirst(string $string, bool $strict = true)
+        {
+            if ($strict)
+            {
+                $string = strtolower($string);
+            }
+
+            return ucfirst($string);
         }
 	}
 }

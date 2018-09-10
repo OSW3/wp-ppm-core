@@ -17,35 +17,41 @@ if (!class_exists('Components\Form\Types\File'))
     class File extends Types 
     {
         /**
-         * Tag Attributes
+         * Define attributes of the tag
          */
-        public function attributes()
-        {
-            return ['type', 'id', 'name', 'class', 'value', 'accept', 'autocomplete', 'autofocus', 'disabled', 'multiple', 'placeholder', 'readonly', 'required', 'size'];
-        }
-
+        const ATTRIBUTES = ['type', 'id', 'name', 'class', 'value', 'accept', 'autocomplete', 'autofocus', 'disabled', 'multiple', 'placeholder', 'readonly', 'required', 'size'];
+        
         /**
-         * Tag Template
+         * Override tag pattern
          */
-        public function tag()
+        protected function tag()
         {
-            if ($this->getConfig('preview'))
+            if ($this->getPreview())
             {
-                return $this->tagWithPreview();
+                return $this->previewPattern();
             }
 
-            return $this->tagInput();            
+            return $this->tagInput();
         }
 
         /**
-         * 
+         * Override defaults parameters
          */
-        private function tagWithPreview()
+        protected function builder()
+        {
+            $this->setPreview();
+        }
+
+        /**
+         * Define pattern for Has Preview
+         */
+        private function previewPattern()
         {
             $tag = "<table>";
             $tag.=  "<tr>";
             $tag.=      "<td>";
             // $tag.=          '<img src="'..'Framework/Assets/images/default.svg'.'">';
+            $tag.=          "Preview Img";
             $tag.=      "</td>";
             $tag.=      "<td>";
             $tag.=          $this->tagInput();

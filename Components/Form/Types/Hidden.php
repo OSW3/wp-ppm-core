@@ -17,13 +17,8 @@ if (!class_exists('Components\Form\Types\Hidden'))
     class Hidden extends Types 
     {
         /**
-         * Tag Attributes
+         * Define attributes of the tag
          */
-        public function attributes()
-        {
-            // TODO: List
-            // TODO: Dirname
-            return ['type', 'id', 'name', 'value', 'disabled', 'max', 'maxlength', 'min', 'pattern', 'required'];
-        }
+        const ATTRIBUTES = ['type', 'id', 'name', 'value', 'disabled', 'max', 'maxlength', 'min', 'pattern', 'required', 'dirname'];
     }
 }

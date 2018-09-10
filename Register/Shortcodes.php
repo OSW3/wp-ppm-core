@@ -10,6 +10,8 @@ if (!defined('WPINC'))
 	exit;
 }
 
+use \Components\Form\Types;
+
 if (!class_exists('Register\Shortcodes'))
 {
 	class Shortcodes extends \Register\Actions
@@ -112,14 +114,17 @@ if (!class_exists('Register\Shortcodes'))
 
                     }
 
-                    $type['post_type'] = $posttype;
-                    // $type['namespace'] = $namespace;
-        
-                    $classname = ucfirst(strtolower($type['type']));
-                    $classname = "\\Components\\Form\\Types\\".$classname;
-        
-                    $type = new $classname($type, '');
-                    echo $type->render();
+                    if (in_array($type['type'], Types::ALLOWED))
+                    {
+                        $type['_posttype'] = $posttype;
+                        $type['_namespace'] = $namespace;
+            
+                        $classname = ucfirst(strtolower($type['type']));
+                        $classname = "\\Components\\Form\\Types\\".$classname;
+            
+                        $type = new $classname($type);
+                        echo $type->render();
+                    }
                 }
             }
         }

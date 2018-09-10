@@ -17,19 +17,16 @@ if (!class_exists('Components\Form\Types\Textarea'))
     class Textarea extends Types 
     {
         /**
-         * Tag Attributes
+         * Define attributes of the tag
          */
-        public function attributes()
-        {
-            return ['id', 'name', 'class', 'value', 'autofocus', 'disabled', 'maxlength', 'required', 'readonly', 'placeholder', 'cols', 'rows'];
-        }
+        const ATTRIBUTES = ['id', 'name', 'class', 'value', 'autofocus', 'disabled', 'maxlength', 'required', 'readonly', 'placeholder', 'cols', 'rows'];
 
         /**
-         * Tag Template
+         * Override tag pattern
          */
-        public function tag()
+        protected function tag()
         {
-            return '<textarea{{attributes}}>'.$this->getValue().'</textarea>';
+            return '<textarea{attributes}>'.$this->getValue().'</textarea>';
         }
     }
 }

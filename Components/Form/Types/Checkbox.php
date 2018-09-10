@@ -17,15 +17,12 @@ if (!class_exists('Components\Form\Types\Checkbox'))
     class Checkbox extends Text 
     {
         /**
-         * Tag Attributes
+         * Define attributes of the tag
          */
-        public function attributes()
-        {
-            return ['type', 'id', 'name', 'class', 'value', 'autofocus', 'disabled', 'readonly', 'required'];
-        }
-
+        const ATTRIBUTES = ['type', 'id', 'name', 'class', 'value', 'autofocus', 'disabled', 'readonly', 'required'];
+        
         /**
-         * Field Builder
+         * Override defaults parameters
          */
         public function builder()
         {
@@ -41,7 +38,7 @@ if (!class_exists('Components\Form\Types\Checkbox'))
             $attr = '';
 
             // Retrieve default value
-            $defaults = $this->getConfig('default');
+            $defaults = $this->getDefinition('default');
 
             // Make sure $defaults is array (array needed for multiple)
             if (!is_array($defaults))

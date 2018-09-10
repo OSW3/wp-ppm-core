@@ -16,20 +16,18 @@ if (!class_exists('Components\Form\Types\Captcha'))
 {
     class Captcha extends Types 
     {
+        /**
+         * Define attributes of the tag
+         */
+        const ATTRIBUTES = [];
+
+
         private $captchaType;
         private $captchaKey;
         private $captchaSecret;
 
         /**
-         * Tag Attributes
-         */
-        public function attributes()
-        {
-            return [];
-        }
-
-        /**
-         * Tag Template
+         * Override tag pattern
          */
         public function tag()
         {
@@ -38,6 +36,16 @@ if (!class_exists('Components\Form\Types\Captcha'))
                 case 'recaptcha':
                     return $this->tag_reCaptcha();
             }
+        }
+
+        /**
+         * Field Builder
+         */
+        public function builder()
+        {
+            $this->setCaptchaType();
+            $this->setCaptchaKey();
+            $this->setCaptchaSecret();
         }
 
         /**
@@ -57,16 +65,6 @@ if (!class_exists('Components\Form\Types\Captcha'))
             
             // Set tag
             return '<div class="g-recaptcha" data-sitekey="'.$this->getCaptchaKey().'"></div>';
-        }
-
-        /**
-         * Field Builder
-         */
-        public function builder()
-        {
-            $this->setCaptchaType();
-            $this->setCaptchaKey();
-            $this->setCaptchaSecret();
         }
 
 

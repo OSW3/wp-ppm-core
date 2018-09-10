@@ -20,15 +20,12 @@ if (!class_exists('Components\Form\Types\Choices'))
     class Choices extends Types 
     {
         /**
-         * Tag Attributes
+         * Define attributes of the tag
          */
-        public function attributes()
-        {
-            return ['id', 'name', 'class', 'multiple'];
-        }
-
+        const ATTRIBUTES = ['id', 'name', 'class', 'multiple'];
+        
         /**
-         * Tag Template
+         * Override tag pattern
          */
         public function tag()
         {
@@ -46,12 +43,13 @@ if (!class_exists('Components\Form\Types\Choices'))
         }
 
         /**
-         * Field Builder
+         * Override defaults parameters
          */
         public function builder()
         {
             $this->setChoices();
             $this->setExpanded();
+
 
             if ($this->getExpanded() && $this->getMultiple()) {
                 $this->setType("choices_checkbox");
@@ -63,6 +61,9 @@ if (!class_exists('Components\Form\Types\Choices'))
                 $this->setType("choices_select");
             }
         }
+
+
+
 
         /**
          * 
@@ -77,7 +78,7 @@ if (!class_exists('Components\Form\Types\Choices'))
          */
         private function tagSelect()
         {
-            return '<select{{attributes}}>'.$this->options().'</select>';
+            return '<select{attributes}>'.$this->options().'</select>';
         }
 
         /**
@@ -87,10 +88,14 @@ if (!class_exists('Components\Form\Types\Choices'))
         {
             $tag = '';
 
+            // $options = [];
+
             foreach ($this->getChoices() as $value => $label) 
             {
                 // Tag options
-                $options = array_merge($this->config,[
+                // $options = array_merge($options,[
+                // $options = array_merge($this->config,[
+                $options = array_merge($this->definition,[
                     "label"     => $label,
                     "value"     => $value,
                     // "selected"  => $this->selected === $value,
@@ -108,8 +113,8 @@ if (!class_exists('Components\Form\Types\Choices'))
                         break;
 
                     case 'choices_select':
-                        $field = new Option($options);
-                        $tag.= $field->render();
+                        $option = new Option($options);
+                        $tag.= $option->render();
                         break;
                 }
             }
@@ -118,17 +123,22 @@ if (!class_exists('Components\Form\Types\Choices'))
         }
 
 
-        private function tagOptionChoice( $field )
+        private function tagOptionChoice( $type )
         {
             $tag = '<div class="choices-option"><label>$1 $2</label></div>';
 
-            if ('checkbox' == $field->getType())
+            if ('checkbox' == $type->getType())
             {
-                $field->setName( $field->getName().'['.$field->getValue().']' );
+
+                // echo '<pre style="padding-left: 180px;">';
+                // print_r( $type->getValue() );
+                // echo '</pre>';
+
+                $type->setName( $type->getName().'['.$type->getValue().']' );
             }
 
-            $tag = preg_replace("/\\$1/", $field->render(), $tag);
-            $tag = preg_replace("/\\$2/", $field->getLabel(), $tag);
+            $tag = preg_replace("/\\$1/", $type->render(), $tag);
+            $tag = preg_replace("/\\$2/", $type->getLabel(), $tag);
 
             return $tag;
         }

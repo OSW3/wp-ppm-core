@@ -17,22 +17,19 @@ if (!class_exists('Components\Form\Types\Wysiwyg'))
     class Wysiwyg extends Types 
     {
         /**
-         * Tag Attributes
+         * Define attributes of the tag
          */
-        public function attributes()
-        {
-            // TODO: Placeholder alternative
-            // TODO: Maxlength alternative
-            // TODO: Autofocus alternative
-            return ['type', 'id', 'name', 'class', 'value', 'autofocus', 'disabled', 'required', 'readonly', 'rows'];
-        }
-
+        // TODO: Placeholder alternative
+        // TODO: Maxlength alternative
+        // TODO: Autofocus alternative
+        const ATTRIBUTES = ['type', 'id', 'name', 'class', 'value', 'autofocus', 'disabled', 'required', 'readonly', 'rows'];
+        
         /**
-         * Tag Template
+         * Override tag pattern
          */
-        public function tag()
+        protected function tag()
         {
-            // -- Define Editor Settings
+            // Define Editor Settings
             $settings = array();
 
             // Display the button "Medias"
@@ -55,9 +52,9 @@ if (!class_exists('Components\Form\Types\Wysiwyg'))
         }
 
         /**
-         * Builder
+         * Override defaults parameters
          */
-        public function builder()
+        protected function builder()
         {
             // $id = preg_replace("/\\[|\\]/", "____", $this->getName());
             $id = $this->getName();

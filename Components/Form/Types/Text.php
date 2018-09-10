@@ -17,13 +17,8 @@ if (!class_exists('Components\Form\Types\Text'))
     class Text extends Types 
     {
         /**
-         * Tag Attributes
+         * Define attributes of the tag
          */
-        public function attributes()
-        {
-            // TODO: List
-            // TODO: Dirname
-            return ['type', 'id', 'name', 'class', 'value', 'autocomplete', 'autofocus', 'disabled', 'maxlength', 'pattern', 'placeholder', 'readonly', 'required', 'size'];
-        }
+        const ATTRIBUTES = ['type', 'id', 'name', 'class', 'value', 'list', 'autocomplete', 'autofocus', 'disabled', 'maxlength', 'pattern', 'placeholder', 'readonly', 'required', 'size', 'dirname'];
     }
 }

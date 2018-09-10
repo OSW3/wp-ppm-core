@@ -17,17 +17,14 @@ if (!class_exists('Components\Form\Types\Radio'))
     class Radio extends Text 
     {
         /**
-         * Tag Attributes
+         * Define attributes of the tag
          */
-        public function attributes()
-        {
-            return ['type', 'id', 'name', 'class', 'value', 'disabled', 'readonly'];
-        }
+        const ATTRIBUTES = ['type', 'id', 'name', 'class', 'value', 'disabled', 'readonly'];
 
         /**
-         * Field Builder
+         * Override defaults parameters
          */
-        public function builder()
+        protected function builder()
         {
             $this->setType('radio');
         }
@@ -35,13 +32,13 @@ if (!class_exists('Components\Form\Types\Radio'))
         /**
          * Override Attr Value
          */
-        public function getAttrValue()
+        protected function getAttrValue()
         {
             // Define attribute string
             $attr = '';
 
             // Retrieve default value
-            $default = $this->getConfig('default');
+            $default = $this->getDefinition('default');
 
             // Make sure $defaults is not an array
             if (!is_array($default))

@@ -17,13 +17,9 @@ if (!class_exists('Components\Form\Types\Time'))
     class Time extends Types 
     {
         /**
-         * Tag Attributes
+         * Define attributes of the tag
          */
-        public function attributes()
-        {
-            // TODO: List
-            // TODO: Step
-            return ['type', 'id', 'name', 'class', 'value', 'list', 'disabled', 'max', 'min', 'readonly', 'required', 'step'];
-        }
+        // TODO: Step
+        const ATTRIBUTES = ['type', 'id', 'name', 'class', 'value', 'list', 'list', 'disabled', 'max', 'min', 'readonly', 'required', 'step'];
     }
 }

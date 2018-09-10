@@ -13,6 +13,7 @@ if (!defined('WPINC'))
 }
 
 use \Components\Form\Types;
+use \Components\Form\Types\Password;
 use \Components\Utils\Arrays;
 use \Components\Utils\Misc;
 use \Components\Utils\Strings;
@@ -236,8 +237,8 @@ if (!class_exists('Register\Posts'))
                 new Tags($post);
 
                 // Add Metaboxes (and supports)
-                // $metaboxes = new Metaboxes($post, $this->kernel->getPlugin()->getConfig('namespace'));
-                $metaboxes = new Metaboxes($post);
+                $metaboxes = new Metaboxes($post, $this->kernel->getPlugin()->getConfig('namespace'));
+                // $metaboxes = new Metaboxes($post);
                 $supports = $metaboxes->getSupports();
 
                 // Define Supports
@@ -1904,7 +1905,7 @@ if (!class_exists('Register\Posts'))
             return $actions;
         }
 
-        
+
         // -- Misc Options
 
         public function screen_options_show_screen( array $post )
