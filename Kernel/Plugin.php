@@ -17,6 +17,6 @@ if (!class_exists('Kernel\Plugin'))
         /**
          * Path of the extra config file
          */
-        const CONFIG_FILENAME = 'config/config.php';
+        const CONFIG_FILENAME = 'Config/Config.php';
     }
 }

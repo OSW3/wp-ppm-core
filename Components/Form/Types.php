@@ -20,6 +20,11 @@ if (!class_exists('Components\Form\Types'))
     abstract class Types
     {
         /**
+         * Base Namespace
+         */
+        const BASE = '\\Components\\Form\\Types\\';
+
+        /**
          * List of allowed Types
          */
         const ALLOWED = [ 'checkbox', 'choices', 'collection', 'color', 'date', 'datetime', 'email', 'file', 'hidden', 'month', 'number', 'option', 'output', 'password', 'radio', 'range', 'captcha', 'search', 'tel', 'text', 'textarea', 'time', 'url', 'week', 'wysiwyg', 'year' ];
@@ -28,6 +33,15 @@ if (!class_exists('Components\Form\Types'))
          * Define default attributes of the tag
          */
         const ATTRIBUTES = ['type', 'id', 'name', 'class', 'value', 'readonly', 'disabled', 'required'];
+
+        /**
+         * Default WP Class of Admin Field
+         */
+        const CLASS_REGULAR_TEXT = 'regular-text';
+        const CLASS_ERROR = 'has-error';
+        const CLASS_REQUIRED = 'is-required';
+        const CLASS_READONLY = 'is-readonly';
+        const CLASS_DISABLED = 'is-disabled';
         
         /**
          * Attribute Accept
@@ -238,6 +252,11 @@ if (!class_exists('Components\Form\Types'))
          * @param array
          */ 
         private $rules;
+        
+        /**
+         * Schema definition (for Collection Type)
+         */ 
+        private $schema;
 
         /**
          * Session
@@ -307,11 +326,6 @@ if (!class_exists('Components\Form\Types'))
         //  * 
         //  */ 
         // private $selected;
-        
-        // /**
-        //  * Schema for collection Type
-        //  */ 
-        // private $schema;
 
         // /**
         //  * 
@@ -375,8 +389,6 @@ if (!class_exists('Components\Form\Types'))
 
             // Build the field
             $this->builder();
-
-            // do_action('admin_head');
         }
 
         /**
@@ -423,7 +435,14 @@ if (!class_exists('Components\Form\Types'))
                  * <label>label</label> <input type="text">
                  */
                 default:
-                    if (!in_array(Misc::get_called_class_name(get_called_class()), ['checkbox', 'radio']))
+                    // if (in_array(Misc::get_called_class_name(get_called_class()), ['checkbox', 'radio']))
+
+            // echo '<pre style="padding-left: 180px;">';
+            // print_r( $this->getType() );
+            // echo '</pre>';
+
+
+                    // if (!in_array($this->getType(), ['checkbox', 'radio', 'option']))
                     {
                         $output.= $this->tagLabel();
                     }
@@ -531,7 +550,7 @@ if (!class_exists('Components\Form\Types'))
 
             return $this;
         }
-        private function getNamespace()
+        protected function getNamespace()
         {
             return $this->namespace;
         }
@@ -545,7 +564,7 @@ if (!class_exists('Components\Form\Types'))
 
             return $this;
         }
-        private function getPosttype()
+        protected function getPosttype()
         {
             return $this->posttype;
         }
@@ -614,7 +633,7 @@ if (!class_exists('Components\Form\Types'))
         /**
          * Formated tag Helper
          */
-        private function tagHelper()
+        protected function tagHelper()
         {
             return $this->getHelper();
         }
@@ -624,6 +643,11 @@ if (!class_exists('Components\Form\Types'))
          */
         private function tagLabel()
         {
+            if (in_array(Misc::get_called_class_name(get_called_class()), ['checkbox', 'radio', 'option']))
+            {
+                return false;
+            }
+
             $tag = '<label{attributes}>{label}{required}</label>';
 
             if (!empty($this->getId())) { 
@@ -743,6 +767,8 @@ if (!class_exists('Components\Form\Types'))
         {
             $definition = $this->getDefinition('choices');
 
+
+
             if (is_array($definition))
             {
                 $choices = array_merge($choices, $definition);
@@ -766,10 +792,27 @@ if (!class_exists('Components\Form\Types'))
             $_class = 'ppm-control';
             
             if (is_admin())
-            //     ($this->template_type == 'metabox' || $this->template_type == 'collection')&&
-            //     !in_array($this->getType(), ['color'])
+            // ($this->template_type == 'metabox' || $this->template_type == 'collection')&&
             {
-                $_class.= ' regular-text';
+                $_class.= ' '.self::CLASS_REGULAR_TEXT;
+            }
+
+            // Is Required
+            if ($this->getRequired())
+            {
+                $_class.= ' '.self::CLASS_REQUIRED;
+            }
+
+            // Is Readonly
+            if ($this->getReadonly())
+            {
+                $_class.= ' '.self::CLASS_READONLY;
+            }
+
+            // Is Disabled
+            if ($this->getDisabled())
+            {
+                $_class.= ' '.self::CLASS_DISABLED;
             }
 
             // Add class error
@@ -778,7 +821,7 @@ if (!class_exists('Components\Form\Types'))
             // {
             //     if (isset($error['key']) && $error['key'] == $this->getConfig('key')) 
             //     {
-            //         $this->class.= ' has-error';
+            //         $this->class.= ' '.self::CLASS_ERROR;
             //     }
             // }
 
@@ -919,7 +962,6 @@ if (!class_exists('Components\Form\Types'))
             // $session = new Session($this->getConfig('namespace'));
             // foreach ($session->errors($this->getConfig('post_type')) as $error) 
             // {
-
             //     if (isset($error['key']) && $error['key'] == $this->getConfig('key')) 
             //     {
             //         array_push($this->helper, ["notice", $error['message']]);
@@ -946,10 +988,9 @@ if (!class_exists('Components\Form\Types'))
 
                 foreach ($helper as $item) 
                 {
-                    if ('notice' == $item[0]) 
-                        $helperHTML.= '<p class="description ppm-description has-error">' . $item[1] . '</p>';
-                    else 
-                        $helperHTML.= '<p class="description ppm-description">' . $item[1] . '</p>';
+                    $helperHTML.= '<p class="description ppm-description';
+                    $helperHTML.= ('notice' == $item[0]) ? ' '.self::CLASS_ERROR : '';
+                    $helperHTML.= '">'.$item[1].'</p>';
                 }
 
                 $helper = $helperHTML;
@@ -1322,6 +1363,34 @@ if (!class_exists('Components\Form\Types'))
         }
 
         /**
+         * Schema
+         */
+        protected function setSchema()
+        {
+            // Default Schema
+            $this->schema = [];
+
+            // Retrive Schema parameters
+            $schema = $this->getDefinition('schema');
+
+            if (is_string($schema) || is_array($schema))
+            {
+                if (is_string($schema))
+                {
+                    $schema = [$schema];
+                }
+
+                $this->schema = $schema;
+            }
+
+            return $this;
+        }
+        protected function getSchema()
+        {
+            return $this->schema;
+        }
+
+        /**
          * Size
          */
         protected function setSize()
@@ -1451,7 +1520,14 @@ if (!class_exists('Components\Form\Types'))
         }
         protected function getAttrValue()
         {
-            return $this->getValue() ? ' value="'.$this->getValue().'"' : null;
+            $value = $this->getValue();
+
+            if (!is_array($value) && $value)
+            {
+                return ' value="'.$this->getValue().'"';
+            }
+
+            return null;
         }
 
 
@@ -1503,36 +1579,6 @@ if (!class_exists('Components\Form\Types'))
     //     protected function getLoop()
     //     {
     //         return $this->loop;
-    //     }
-
-    //     /**
-    //      * Schema
-    //      * 
-    //      * Define schema for Collection Type
-    //      */
-    //     protected function setSchema()
-    //     {
-    //         // Default Schema
-    //         $this->schema = [];
-
-    //         // Retrive Schema parameters
-    //         $schema = $this->getConfig('schema');
-
-    //         if (is_string($schema) || is_array($schema))
-    //         {
-    //             if (is_string($schema))
-    //             {
-    //                 $schema = [$schema];
-    //             }
-
-    //             $this->schema = $schema;
-    //         }
-
-    //         return $this;
-    //     }
-    //     protected function getSchema()
-    //     {
-    //         return $this->schema;
     //     }
 
     //     /**

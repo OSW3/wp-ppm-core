@@ -26,14 +26,21 @@ if (!class_exists('Components\Form\Types\Output'))
          */
         protected function tag()
         {
-            return '<output{{attributes}}></output>';
+            return '<output{attributes}></output>';
         }
 
         /**
          * Override Attr Value
          */
+        // protected function setValue($value = null, $postID = null)
+        // {
+        //     return $this->getDefinition('default');
+        // }
         protected function getAttrValue()
         {
+            // echo '<pre style="padding-left: 180px;">';
+            // print_r( $this->getValue() );
+            // echo '</pre>';
             return $this->getValue() ? ' for="'.$this->getValue().'"' : null;
         }
     }

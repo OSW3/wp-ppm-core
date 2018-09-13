@@ -19,6 +19,6 @@ if (!class_exists('Components\Form\Types\Text'))
         /**
          * Define attributes of the tag
          */
-        const ATTRIBUTES = ['type', 'id', 'name', 'class', 'value', 'list', 'autocomplete', 'autofocus', 'disabled', 'maxlength', 'pattern', 'placeholder', 'readonly', 'required', 'size', 'dirname'];
+        const ATTRIBUTES = ['type', 'id', 'name', 'value', 'list', 'autocomplete', 'autofocus', 'disabled', 'maxlength', 'pattern', 'placeholder', 'readonly', 'required', 'size', 'dirname', 'class'];
     }
 }

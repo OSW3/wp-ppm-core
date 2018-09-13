@@ -11,6 +11,7 @@ if (!defined('WPINC'))
 }
 
 use \Components\Form\Types;
+use \Components\Utils\Strings;
 
 if (!class_exists('Components\Form\Types\Wysiwyg'))
 {
@@ -39,12 +40,10 @@ if (!class_exists('Components\Form\Types\Wysiwyg'))
             $settings['editor_class'] = $this->getClass();
 
             // Editor Name Attribute
-            // $settings['textarea_name'] = $this->getId();
             $settings['textarea_name'] = $this->getName();
 
             // Editor Height
             $settings['textarea_rows'] = $this->getRows() ? $this->getRows() : 10;
-
 
             ob_start();
             wp_editor( $this->getValue(), $this->getId(), $settings );
@@ -56,12 +55,16 @@ if (!class_exists('Components\Form\Types\Wysiwyg'))
          */
         protected function builder()
         {
-            // $id = preg_replace("/\\[|\\]/", "____", $this->getName());
-            $id = $this->getName();
-            $id = preg_replace("/\\[|\\]/", "†", $id);
-            $this->setId($id);
+            // Retrieve the Type name
+            $name = $this->getName();
 
-            // Readonly or Disabled attribute
+            // Retrive the Plugin Namespace
+            $namespace = $this->getNamespace();
+
+            // Encode the Braket of the Type name and set the Type ID
+            $this->setId(Strings::braket_encode($name, $namespace));
+
+            // Set Readonly or Disabled attribute
             add_filter( 'tiny_mce_before_init', function( $args ) {
                 $args['readonly'] = $this->getReadonly() || $this->getDisabled();
                 return $args;

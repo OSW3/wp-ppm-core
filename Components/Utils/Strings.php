@@ -104,5 +104,33 @@ if (!class_exists('Components\Utils\Strings'))
 
             return ucfirst($string);
         }
+
+        /**
+         * Braket Encoder / Decoder
+         */
+        public static function braket_encode(string $string, string $namespace)
+        {
+            $md5 = md5($namespace);
+            $key = $md5[0].$md5[strlen($md5)-1];
+            $open = "_".$namespace[0].$key."_";
+            $close = "_".$key.$namespace[strlen($namespace)-1]."_";
+
+            $string = preg_replace("/\\[/", $open, $string);
+            $string = preg_replace("/\\]/", $close, $string);
+
+            return $string;
+        }
+        public static function braket_decode(string $string, string $namespace)
+        {
+            $md5 = md5($namespace);
+            $key = $md5[0].$md5[strlen($md5)-1];
+            $open = "_".$namespace[0].$key."_";
+            $close = "_".$key.$namespace[strlen($namespace)-1]."_";
+
+            $string = preg_replace("/".$open."/", "[", $string);
+            $string = preg_replace("/".$close."/", "]", $string);
+
+            return $string;
+        }
 	}
 }

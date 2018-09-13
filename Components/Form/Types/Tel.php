@@ -20,5 +20,28 @@ if (!class_exists('Components\Form\Types\Tel'))
          * Define attributes of the tag
          */
         const ATTRIBUTES = ['type', 'id', 'name', 'class', 'value', 'list', 'autocomplete', 'autofocus', 'disabled', 'maxlength', 'pattern', 'placeholder', 'readonly', 'required', 'size', 'dirname'];
+
+        /**
+         * Override tag pattern
+         */
+        protected function tag()
+        {
+            // TODO: Field Tel Expanded (Country index + Tel)
+            // if ($this->getExpanded()) 
+            // {
+            //     return "Tel + Index";
+            // }
+
+            // Return default Input Tag
+            return $this->tagInput();
+        }
+
+        /**
+         * Override defaults parameters
+         */
+        public function builder()
+        {
+            $this->setExpanded();
+        }
     }
 }

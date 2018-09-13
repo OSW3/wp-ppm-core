@@ -27,7 +27,7 @@ if (!class_exists('Components\Form\Types\Choices'))
         /**
          * Override tag pattern
          */
-        public function tag()
+        protected function tag()
         {
             switch ($this->getType())
             {
@@ -45,11 +45,10 @@ if (!class_exists('Components\Form\Types\Choices'))
         /**
          * Override defaults parameters
          */
-        public function builder()
+        protected function builder()
         {
             $this->setChoices();
             $this->setExpanded();
-
 
             if ($this->getExpanded() && $this->getMultiple()) {
                 $this->setType("choices_checkbox");
@@ -88,17 +87,14 @@ if (!class_exists('Components\Form\Types\Choices'))
         {
             $tag = '';
 
-            // $options = [];
-
             foreach ($this->getChoices() as $value => $label) 
             {
                 // Tag options
-                // $options = array_merge($options,[
-                // $options = array_merge($this->config,[
                 $options = array_merge($this->definition,[
                     "label"     => $label,
                     "value"     => $value,
                     // "selected"  => $this->selected === $value,
+                    // "default"  => $this->getDefinition('default'),
                     "choices"   => []
                 ]);
 
@@ -129,12 +125,7 @@ if (!class_exists('Components\Form\Types\Choices'))
 
             if ('checkbox' == $type->getType())
             {
-
-                // echo '<pre style="padding-left: 180px;">';
-                // print_r( $type->getValue() );
-                // echo '</pre>';
-
-                $type->setName( $type->getName().'['.$type->getValue().']' );
+                $type->setName( $type->getName().'['.$type->getDefinition('value').']' );
             }
 
             $tag = preg_replace("/\\$1/", $type->render(), $tag);

@@ -45,7 +45,7 @@ if (!class_exists('Components\Form\Types\Option'))
         protected function getAttrValue()
         {
             // Retrieve default value
-            $defaults = $this->getdefinition('default');
+            $defaults = $this->getDefinition('default');
 
             // Make sure $defaults is array (array needed for multiple)
             if (!is_array($defaults))
@@ -57,7 +57,8 @@ if (!class_exists('Components\Form\Types\Option'))
 
             foreach ($defaults as $default) 
             {
-                if ($this->getValue() === $default)
+                // if ($this->getValue() === $default)
+                if ($this->getDefinition('value') === $default)
                 {
                     $attr.= ' selected="selected"';
                 }

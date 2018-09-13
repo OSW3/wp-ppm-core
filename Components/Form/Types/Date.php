@@ -21,10 +21,24 @@ if (!class_exists('Components\Form\Types\Date'))
          */
         const ATTRIBUTES = ['type', 'id', 'name', 'class', 'value', 'list', 'disabled', 'max', 'min', 'readonly', 'required', 'step'];
         // <input type="date" name="thedate" list="dates">
-        
         // <datalist id="dates">
         //     <option value="1985-09-10">
         //     <option value="1982-03-15">
         // </datalist>
+
+        /**
+         * Override Get Value
+         */
+        protected function getValue()
+        {
+            $value = parent::getValue();
+
+            if ($value === 'today')
+            {
+                $value = date("Y-m-d");
+            }
+
+            return $value;
+        }
     }
 }

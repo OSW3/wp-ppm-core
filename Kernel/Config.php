@@ -532,7 +532,7 @@ if (!class_exists('Kernel\Config'))
         /**
          * Text Domain
          */
-        public function setTextdomain()
+        public function setTextDomain()
         {
             $textDomain = $this->getDefinition('TextDomain');
 

@@ -27,10 +27,30 @@ if (!class_exists('Components\Utils\Misc'))
 		}
 
 		/**
+		 * i18n
+		 */
+		public static function i18n(array $pattern, array $subject, string $textDomain = '')
+		{
+			foreach ($subject as $key => $value) 
+			{
+				if (in_array($key, $pattern) && is_string($value) && !empty($value))
+				{
+					$subject[$key] = __($value, $textDomain);
+				}
+				else
+				{
+					unset($subject[$key]);
+				}
+			}
+			
+			return $subject;
+		}
+
+		/**
 		 * HTML Injection
 		 * 
 		 * @param string $source — The source code
-		 * @param string $node — 'head' or 'footer', The target node <head> or <body> (footer)
+		 * @param string $node — 'head' or 'footer', The target node <head> or end of <body> (footer)
 		 * @param string $side — 'front', 'admin' or 'both'
 		 */
 		public static function injection(string $source, string $node = 'head', string $side = 'both')

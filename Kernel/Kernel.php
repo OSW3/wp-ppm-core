@@ -13,10 +13,6 @@ if (!defined('WPINC'))
 use \Kernel\Core;
 use \Kernel\Plugin;
 
-// use \Register\Posts;
-// use \Register\Settings;
-// use \Register\Widgets;
-
 if (!class_exists('Kernel\Kernel'))
 {
     abstract class Kernel
@@ -41,34 +37,6 @@ if (!class_exists('Kernel\Kernel'))
          */
         public function __construct(string $file = '')
         {
-            
-// session_id("session1");
-// session_start();
-// echo session_id();
-// $_SESSION["name"] = "1";
-// // echo "<pre>", print_r($_SESSION, 1), "</pre>";
-// session_write_close();
-
-// session_id("session2");
-// echo session_id();
-// session_start();
-// $_SESSION["name"] = "2";
-// // echo "<pre>", print_r($_SESSION, 1), "</pre>";
-// session_write_close();
-
-// session_id("session1");
-// echo session_id();
-// session_start();
-// echo "<pre>", print_r($_SESSION, 1), "</pre>";
-// session_write_close();
-
-// session_id("session2");
-// echo session_id();
-// session_start();
-// echo "<pre>", print_r($_SESSION, 1), "</pre>";
-
-
-
             // Core definition
             $this->core = new Core();
 
@@ -106,9 +74,9 @@ if (!class_exists('Kernel\Kernel'))
             new \Register\Filters($this);
             new \Register\Hooks($this);
             new \Register\Posts($this);
-            // $this->setSettings();
+            // \Register\Settings($this);
             new \Register\Shortcodes($this);
-            // $this->setWidgets();
+            // \Register\Widgets($this);
 
             if (is_admin()) 
             {

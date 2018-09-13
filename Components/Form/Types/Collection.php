@@ -11,7 +11,8 @@ if (!defined('WPINC'))
 }
 
 use \Components\Form\Types;
-use \Kernel\Request;
+use \Components\Utils\Strings;
+// use \Kernel\Request;
 
 if (!class_exists('Components\Form\Types\Collection'))
 {
@@ -23,6 +24,11 @@ if (!class_exists('Components\Form\Types\Collection'))
         const ATTRIBUTES = ['id', 'name', 'class'];
 
         /**
+         * The pattern of Serial Expression
+         */
+        const SERIAL = '{{number}}';
+
+        /**
          * List of collection items (on load)
          */
         private $items = [];
@@ -32,7 +38,12 @@ if (!class_exists('Components\Form\Types\Collection'))
          */
         public function tag()
         {
-            $tag = '<div class="ppm-collection" data-ppm-collection="'.$this->getId().'" data-role="collection" data-min="'.$this->getLoop().'">';
+            $tag = '<div 
+                class="ppm-collection" 
+                data-ppm-collection="'.$this->getId().'" 
+                data-role="collection" 
+                >';
+                // data-min="'.$this->getLoop().'">';
 
             // Collection container
             $tag.= $this->container();
@@ -55,7 +66,7 @@ if (!class_exists('Components\Form\Types\Collection'))
         {
             $this->setType('collection');
             $this->setSchema();
-            $this->setLoop();
+            // $this->setLoop();
             $this->setItems();
         }
 
@@ -72,28 +83,28 @@ if (!class_exists('Components\Form\Types\Collection'))
 
             // -- Generate Items list from Responses on session
 
-            $session = $this->session->responses($this->getConfig('post_type'));
+            // $session = $this->session->responses($this->getConfig('post_type'));
 
-            if (isset($session[$this->getConfig('key')]))
-            {
-                $types = $session[$this->getConfig('key')];
+            // if (isset($session[$this->getConfig('key')]))
+            // {
+            //     $types = $session[$this->getConfig('key')];
 
-                foreach ($types as $type => $values) 
-                {
-                    if (is_array($values))
-                    {
-                        foreach ($values as $key => $value) 
-                        {
-                            if (!isset($items[$key]))
-                            {
-                                $items[$key] = array();
-                            }
+            //     foreach ($types as $type => $values) 
+            //     {
+            //         if (is_array($values))
+            //         {
+            //             foreach ($values as $key => $value) 
+            //             {
+            //                 if (!isset($items[$key]))
+            //                 {
+            //                     $items[$key] = array();
+            //                 }
                             
-                            $items[$key] = array_merge($items[$key], [$type => $value]);
-                        }
-                    }
-                }
-            }
+            //                 $items[$key] = array_merge($items[$key], [$type => $value]);
+            //             }
+            //         }
+            //     }
+            // }
 
 
             // -- Generate Items list from database
@@ -103,7 +114,7 @@ if (!class_exists('Components\Form\Types\Collection'))
                 $query = new \WP_Query([
                     'wpse_include_parent' => true,
                     'post_parent'         => get_the_ID(),
-                    'post_type'           => $this->getConfig('_VPOST'),
+                    'post_type'           => $this->getDefinition('_VPOST'),
                     'posts_per_page'      => -1
                 ]);
 
@@ -115,7 +126,7 @@ if (!class_exists('Components\Form\Types\Collection'))
 
                         $item               = array();
                         $item['_PARENT']    = get_the_ID();
-                        $item['_VPOST']     = $this->getConfig('_VPOST');
+                        $item['_VPOST']     = $this->getDefinition('_VPOST');
                         $item['_VPOST_ID']  = $post->ID;
 
                         foreach ($metas as $key => $value) 
@@ -167,7 +178,7 @@ if (!class_exists('Components\Form\Types\Collection'))
             $item               = array();
             $item['_PARENT']    = get_the_ID();
             // $item['_PARENT']    = null;
-            $item['_VPOST']     = $this->getConfig('_VPOST');
+            $item['_VPOST']     = $this->getDefinition('_VPOST');
             $item['_VPOST_ID']  = null;
 
             return $item;
@@ -221,7 +232,7 @@ if (!class_exists('Components\Form\Types\Collection'))
          */
         public function item( array $item = [], $serial = null)
         {
-            $tag = '<div id="ppm-collection-item-{{number}}" class="ppm-collection-item" data-role="item">';
+            $tag = '<div id="ppm-collection-item-'.self::SERIAL.'" class="ppm-collection-item" data-role="item">';
 
             // Item header
             $tag.= $this->item_header();
@@ -237,7 +248,7 @@ if (!class_exists('Components\Form\Types\Collection'))
             
             if (null !== $serial)
             {
-                $tag = preg_replace("/{{number}}/", $serial, $tag);
+                $tag = preg_replace("/".self::SERIAL."/", $serial, $tag);
             }
 
             return $tag;
@@ -263,23 +274,25 @@ if (!class_exists('Components\Form\Types\Collection'))
         {
             $tag = '';
 
-            foreach ($this->getSchema() as $schema) 
+            foreach ($this->getSchema() as $type) 
             {
-                $schema['post_type'] = $this->getConfig('post_type');
-                $schema['namespace'] = $this->getConfig('namespace');
-                $schema['collection'] = $this->getId();
+                $type['_posttype'] = $this->getPosttype();
+                $type['_namespace'] = $this->getNamespace();
+                $type['_collection'] = $this->getId();
 
-                $type_name = $this->getName() .'['.$schema['key'].'][{{number}}]';
+                $classname = Strings::ucfirst($type['type']);
+                $classname = Types::BASE.$classname;
 
-                $type_class = ucfirst(strtolower($schema['type']));
-                $type_class = "\\\Components\\Form\Types\\".$type_class;
-                $type = new $type_class($schema, 'collection');
-                $type->setName($type_name);
+                $type = new $classname($type, 'collection');
+                $key = $type->getDefinition('key');
+                
+                // Add the {{number}} variable to the Name
+                $type->setName($this->getName().'['.$key.']['.self::SERIAL.']');
 
-                switch ($schema['key'])
+                switch ($key)
                 {
                     case '_VPOST':
-                        $type->setValue($this->getConfig('_VPOST'));
+                        $type->setValue($this->getDefinition('_VPOST'));
                         break;
                     
                     case '_PARENT':
@@ -288,39 +301,40 @@ if (!class_exists('Components\Form\Types\Collection'))
 
                     case '_VPOST_ID':
                     default:
-
-                // echo "<pre>";
-                // var_dump( $item );
-                // echo "</pre>";
-
                         if (empty($item))
                         {
                             $type->setValue(''); 
                         }
-                        else if ( isset($item[$schema['key']]) )
+                        else if ( isset($item[$key]) )
                         {
-                            $type->setValue( $item[$schema['key']] );
+                            $type->setValue( $item[$key] );
                         }
                 }
 
 
-                if ('hidden' == $schema['type'])
+                if ('hidden' == $type->getDefinition('type'))
                 {
-                    $tag.= $type->tagTemplate();
+                    $tag.= $type->tagRender();
                 }
                 else
                 {
                     $tag.= $type->render();
                 }
 
-                // if ('wysiwyg' == $schema['type'])
-                // {
-                //     $tag = str_replace(
-                //         "wp-".$schema['post_type']."†".$schema['key']."†-{{number}}-", 
-                //         "wp-".$schema['post_type']."†".$schema['key']."†-__number__-",
-                //         $tag
-                //     );
-                // }
+                if ('wysiwyg' == $type->getDefinition('type'))
+                {
+                    // $type->setId($this->getName().'['.$key.'][{{number}}]');
+    
+                    // echo "<pre>";
+                    // var_dump( $type->getName('name') );
+                    // echo "</pre>";
+
+                    // $tag = str_replace(
+                    //     "wp-".$type['post_type']."†".$type['key']."†-{{number}}-", 
+                    //     "wp-".$type['post_type']."†".$type['key']."†-__number__-",
+                    //     $tag
+                    // );
+                }
 
             }
             
@@ -346,7 +360,7 @@ if (!class_exists('Components\Form\Types\Collection'))
             
             $output.= '<tr>';
             $output.= '<td class="ppm-collection-row">';
-            $output.= $this->tagTemplate();
+            $output.= $this->tagRender();
             $output.= '</td>';
             $output.= '</tr>';
 

@@ -20,9 +20,10 @@ if (!class_exists('Register\Assets'))
         /**
          * Directories
          */
-        const DIRECTORY_IMAGES  = "Public/assets/images/";
-        const DIRECTORY_SCRIPTS = "Public/assets/scripts/";
-        const DIRECTORY_STYLES  = "Public/assets/styles/";
+        const DIRECTORY_ASSETS  = "Assets/";
+        const DIRECTORY_IMAGES  = self::DIRECTORY_ASSETS."images/";
+        const DIRECTORY_SCRIPTS = self::DIRECTORY_ASSETS."scripts/";
+        const DIRECTORY_STYLES  = self::DIRECTORY_ASSETS."styles/";
 
         /**
          * Definition of merged assets from Core & Plugin

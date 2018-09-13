@@ -43,6 +43,11 @@ if (!class_exists('Register\Posts'))
         const ENDPOINT_MASK = ["EP_NONE", "EP_PERMALINK", "EP_ATTACHMENT",  "EP_DATE", "EP_YEAR", "EP_MONTH", "EP_DAY", "EP_ROOT",  "EP_COMMENTS", "EP_SEARCH", "EP_CATEGORIES", "EP_TAGS",  "EP_AUTHORS", "EP_PAGES", "EP_ALL_ARCHIVES", "EP_ALL"];
 
         /**
+         * List of custom post parameters we want to internationalize
+         */
+        const LABELS_UI = ['singular_name','add_new','add_new_item','edit_item','new_item','view_item','view_items','search_items','not_found','not_found_in_trash','parent_item_colon','all_items','archives','attributes','insert_into_item','uploaded_to_this_item','featured_image','set_featured_image','remove_featured_image','use_featured_image','menu_name','filter_items_list','items_list_navigation','items_list'];
+
+        /**
          * Max size for the custom post type identifier
          */
         const POSTTYPE_SIZE = 20;
@@ -94,35 +99,6 @@ if (!class_exists('Register\Posts'))
          * @param array
          */
         private $types;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        // /**
-        //  * List of custom post parameters we want to internationalize
-        //  */
-        // const LABELS_UI = ['singular_name','add_new','add_new_item','edit_item',
-        //     'new_item','view_item','view_items','search_items','not_found',
-        //     'not_found_in_trash','parent_item_colon','all_items','archives',
-        //     'attributes','insert_into_item','uploaded_to_this_item',
-        //     'featured_image','set_featured_image','remove_featured_image',
-        //     'use_featured_image','menu_name','filter_items_list',
-        //     'items_list_navigation','items_list'];
 
 
         // /**
@@ -353,6 +329,11 @@ if (!class_exists('Register\Posts'))
         }
         public function getPosts( string $type = '' )
         {
+            if (!is_array($this->posts))
+            {
+                $this->posts = array();
+            }
+
             if (!empty($type))
             {
                 foreach ($this->posts as $post) 
@@ -415,7 +396,7 @@ if (!class_exists('Register\Posts'))
             }
 
             // Retrieve each Posts
-            foreach ($this->posts as $post) 
+            foreach ($this->getPosts() as $post) 
             {
                 // Search for Schema parameter
                 if (isset($post['schema']) && is_array($post['schema']))
@@ -1124,10 +1105,11 @@ if (!class_exists('Register\Posts'))
             {
                 $post['labels'] = array_merge(
                     $post['labels'], 
-                    $post['ui']['labels']
-
-                    // TODO : i18n
-                    // $this->bs->i18n(self::LABELS_UI, $post['ui']['labels'])
+                    Misc::i18n(
+                        self::LABELS_UI, 
+                        $post['ui']['labels'],
+                        $this->kernel->getPlugin()->getConfig('textDomain')
+                    ) 
                 );
 
                 unset($post['ui']['labels']);

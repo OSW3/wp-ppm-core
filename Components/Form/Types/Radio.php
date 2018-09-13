@@ -43,7 +43,7 @@ if (!class_exists('Components\Form\Types\Radio'))
             // Make sure $defaults is not an array
             if (!is_array($default))
             {
-                if ($this->getValue() === $default)
+                if ($this->getDefinition('value') === $default)
                 {
                     $attr.= ' checked="checked""';
                 }

@@ -21,10 +21,20 @@ if (!class_exists('Components\Form\Types\Captcha'))
          */
         const ATTRIBUTES = [];
 
-
-        private $captchaType;
+        /**
+         * Define Captcha Key
+         */
         private $captchaKey;
+
+        /**
+         * Define Captcha Secret
+         */
         private $captchaSecret;
+
+        /**
+         * Define Captcha type
+         */
+        private $captchaType;
 
         /**
          * Override tag pattern
@@ -34,7 +44,7 @@ if (!class_exists('Components\Form\Types\Captcha'))
             switch ($this->getCaptchaType())
             {
                 case 'recaptcha':
-                    return $this->tag_reCaptcha();
+                    return $this->google_reCaptcha();
             }
         }
 
@@ -46,25 +56,6 @@ if (!class_exists('Components\Form\Types\Captcha'))
             $this->setCaptchaType();
             $this->setCaptchaKey();
             $this->setCaptchaSecret();
-        }
-
-        /**
-         * tag for Google reCaptcha
-         */
-        public function tag_reCaptcha()
-        {
-            // Google Script Injection
-            if (is_admin())
-            {
-                add_action('admin_head', function(){ echo "<script src='https://www.google.com/recaptcha/api.js'></script>"; });
-            }
-            else
-            {
-                wp_enqueue_script('g-recaptcha','https://www.google.com/recaptcha/api.js');
-            }
-            
-            // Set tag
-            return '<div class="g-recaptcha" data-sitekey="'.$this->getCaptchaKey().'"></div>';
         }
 
 
@@ -114,6 +105,35 @@ if (!class_exists('Components\Form\Types\Captcha'))
         private function getCaptchaSecret()
         {
             return $this->captchaSecret;
+        }
+
+
+        /**
+         * ----------------------------------------
+         * Google ReCaptcha
+         * ----------------------------------------
+         */
+
+        /**
+         * tag for Google reCaptcha
+         */
+        public function google_reCaptcha()
+        {
+            $api = 'https://www.google.com/recaptcha/api.js';
+
+            // Google Script Injection
+            if (is_admin())
+            {
+                add_action('admin_head', function() use ($api) { echo '<script src="'.$api.'"></script>'; });
+                do_action('admin_head');
+            }
+            else
+            {
+                wp_enqueue_script('g-recaptcha', $api);
+            }
+            
+            // Set tag
+            return '<div class="g-recaptcha" data-sitekey="'.$this->getCaptchaKey().'"></div>';
         }
     }
 }

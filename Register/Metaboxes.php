@@ -14,6 +14,7 @@ use \Kernel\Request;
 use \Components\Form\Types;
 use \Components\Utils\Arrays;
 use \Components\Utils\Misc;
+use \Components\Utils\Strings;
 
 if (!class_exists('Register\Metaboxes'))
 {
@@ -481,8 +482,8 @@ if (!class_exists('Register\Metaboxes'))
                         $type['_posttype'] = $metabox['post_type'];
                         $type['_namespace'] = $this->namespace;
     
-                        $classname = ucfirst(strtolower($type['type']));
-                        $classname = '\\Components\\Form\\Types\\'.$classname;
+                        $classname = Strings::ucfirst($type['type']);
+                        $classname = Types::BASE.$classname;
                         
                         $type = new $classname($type, 'metabox');
                         $content.= $type->render();

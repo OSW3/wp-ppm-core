@@ -10,7 +10,8 @@ if (!defined('WPINC'))
 	exit;
 }
 
-use \Components\Form\Types\Choices;
+// use \Components\Form\Types\Choices;
+use \Components\Form\Types\Text;
 
 if (!class_exists('Components\Form\Types\Year'))
 {
@@ -19,29 +20,16 @@ if (!class_exists('Components\Form\Types\Year'))
         /**
          * Define attributes of the tag
          */
-        const ATTRIBUTES = ['type', 'id', 'name', 'class', 'value', 'autofocus', 'disabled', 'multiple', 'readonly', 'required', 'size'];
+        const ATTRIBUTES = ['id', 'name', 'class', 'autofocus', 'disabled', 'multiple', 'readonly', 'required'];
 
         /**
          * Override defaults parameters
          */
         protected function builder()
         {
-            $this->setType('select');
+            $this->setType('choices_select');
             $this->setChoices($this->choices());
         }
-
-
-
-
-
-
-
-
-
-
-
-        
-
 
         /**
          * Define list of choices dates
@@ -60,9 +48,9 @@ if (!class_exists('Components\Form\Types\Year'))
             $choices = [];
 
             // Retrieve Range parameter
-            if ($this->getConfig('range'))
+            $range = $this->getDefinition('range');
+            if ($range)
             {
-                $range = $this->getConfig('range');
 
                 // ReDefine Dates range
                 $start = isset($range[0]) ? $range[0] : null;

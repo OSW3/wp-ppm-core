@@ -36,13 +36,6 @@ $config = [
                 'dependencies' => ['jquery3','ppm-autosize'],
                 'in_header' => false,
                 'enqueue' => true
-            ],[
-                'handle' => "vue-js",
-                'src' => 'http://vuejs.com/main.js',
-                'version' => null,
-                'dependencies' => [],
-                'in_header' => false,
-                'enqueue' => true
            ]],
        ],
        

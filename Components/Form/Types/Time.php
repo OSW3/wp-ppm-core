@@ -21,5 +21,27 @@ if (!class_exists('Components\Form\Types\Time'))
          */
         // TODO: Step
         const ATTRIBUTES = ['type', 'id', 'name', 'class', 'value', 'list', 'list', 'disabled', 'max', 'min', 'readonly', 'required', 'step'];
+
+
+        /**
+         * Override Get Value
+         */
+        protected function getValue()
+        {
+            $value = parent::getValue();
+            $pattern = "H:i";
+
+            if ($this->getRule('pattern'))
+            {
+                $pattern = $this->getRule('pattern');
+            }
+
+            if ($value === 'now')
+            {
+                $value = date($pattern);
+            }
+
+            return $value;
+        }
     }
 }

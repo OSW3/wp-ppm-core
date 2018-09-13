@@ -11,6 +11,7 @@ if (!defined('WPINC'))
 }
 
 use \Components\Form\Types;
+use \Components\Utils\Strings;
 
 if (!class_exists('Register\Shortcodes'))
 {
@@ -119,8 +120,8 @@ if (!class_exists('Register\Shortcodes'))
                         $type['_posttype'] = $posttype;
                         $type['_namespace'] = $namespace;
             
-                        $classname = ucfirst(strtolower($type['type']));
-                        $classname = "\\Components\\Form\\Types\\".$classname;
+                        $classname = Strings::ucfirst($type['type']);
+                        $classname = Types::BASE.$classname;
             
                         $type = new $classname($type);
                         echo $type->render();

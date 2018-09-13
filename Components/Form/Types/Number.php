@@ -19,7 +19,6 @@ if (!class_exists('Components\Form\Types\Number'))
         /**
          * Define attributes of the tag
          */
-        // TODO: Pattern
         const ATTRIBUTES = ['type', 'id', 'name', 'class', 'value', 'autocomplete', 'autofocus', 'disabled', 'max', 'maxlength', 'min', 'placeholder', 'readonly', 'required', 'size', 'step'];
     }
 }

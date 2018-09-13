@@ -19,6 +19,17 @@ if (!class_exists('Components\Form\Types\Color'))
         /**
          * Define attributes of the tag
          */
-        const ATTRIBUTES = ['type', 'id', 'name', 'class', 'value', 'list', 'disabled'];
+        const ATTRIBUTES = ['type', 'id', 'name', 'value', 'list', 'disabled', 'class'];
+
+        /**
+         * Override the classe Getter
+         */
+        protected function getClass()
+        {
+            // Remove the class 'regular-text'
+            $class = preg_replace("/".Types::CLASS_REGULAR_TEXT."/", null, parent::getClass());
+
+            return $class;
+        }
     }
 }

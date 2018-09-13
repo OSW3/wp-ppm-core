@@ -48,9 +48,9 @@ if (!class_exists('Components\Form\Types\Checkbox'))
 
             foreach ($defaults as $default) 
             {
-                if ($this->getValue() === $default || 'on' === strtolower($this->getValue()))
+                if ($this->getDefinition('value') === $default || 'on' === strtolower($this->getDefinition('value')))
                 {
-                    $attr.= ' checked="checked""';
+                    $attr.= ' checked="checked"';
                 }
             }
 
