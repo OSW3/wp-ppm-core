@@ -10,10 +10,207 @@ if (!defined('WPINC'))
 	exit;
 }
 
+use \Register\Posts;
+use \Components\Utils\Arrays;
+
 if (!class_exists('Kernel\Request'))
 {
     class Request
     {
+        /**
+         * Action parameter
+         */
+        private $action;
+
+
+        public function __construct()
+        {
+            $this->setAction();
+        }
+
+
+        /**
+         * ----------------------------------------
+         * Retrieve request data
+         * ----------------------------------------
+         */
+        
+        /**
+         * Return respons of Custom Post form
+         * 
+         * @param string $type of the response ('both', 'request' or 'files')
+         *      'request' for $_POST data only
+         *      'files' for $_FILES data only
+         *      'both' for $_POST data and $_FILES
+         * @return array
+         */
+        public function responses(string $type = 'both')
+        {
+            $posttype   = $this->posttype();
+            $request    = $this->request($posttype);
+            $files      = $this->files($posttype);
+            
+            switch ($type) 
+            {
+                case 'request':
+                    $responses = $request;
+                    break;
+                
+                case 'files':
+                    $responses = $files;
+                    break;
+                    
+                case 'both':                
+                default:
+                    $responses = array_merge($request, $files);
+                    break;
+            }
+
+            return $responses;
+        }
+        
+        /**
+         * Retrieve Data from POST
+         * 
+         * @param string $key of request parameter
+         * @return misc
+         */
+        public function request(string $key = '')
+        {
+            return $this->getParameters('POST', $key);
+        }
+        
+        /**
+         * Retrieve Data from GET
+         * 
+         * @param string $key of request parameter
+         * @return misc
+         */
+        public function get(string $key = '')
+        {
+            return $this->getParameters('GET', $key);
+        }
+        
+        /**
+         * Retrieve Data from FILES
+         * 
+         * @param string $key of request parameter
+         * @return misc
+         */
+        public function files(string $posttype = '')
+        {
+            $files = array();
+
+            foreach ($this->getParameters('FILES', $posttype) as $key => $types) 
+            {
+                foreach ($types as $type_key => $value) 
+                {
+                    if (!is_array($value))
+                    {
+                        $value = [$value];
+                    }
+
+                    if (!isset($files[$type_key]))
+                    {
+                        $files[$type_key] = array();
+                    }
+
+                    // If $value is an associative array, it's certainly 
+                    // provided by a Collection
+                    if (is_array($value) && !Arrays::isNumeric($value))
+                    {
+                        foreach ($value as $cType => $cValue) 
+                        {
+                            if (!isset($files[$type_key][$cType]))
+                            {
+                                $files[$type_key][$cType] = array();
+                            }
+
+                            foreach ($cValue as $serial => $itemValue) 
+                            {
+                                if (!isset($files[$type_key][$cType][$serial]))
+                                {
+                                    $files[$type_key][$cType][$serial] = array();
+                                }
+
+                                foreach ($itemValue as $k => $v) 
+                                {
+                                    if (!isset($files[$type_key][$cType][$serial][$k]))
+                                    {
+                                        $files[$type_key][$cType][$serial][$k] = array();
+                                    }
+
+                                    $files[$type_key][$cType][$serial][$k] = array_merge($files[$type_key][$cType][$serial][$k],[$key => $v]);
+
+                                    // foreach (Posts::COLLECTION_VPOST as $_data) 
+                                    // {
+                                    //     $files[$type_key][$cType][$serial][$k] = array_merge($files[$type_key][$cType][$serial][$k],[$_data => $_POST[$posttype][$type_key][$_data][$serial]]);
+                                    // }
+                                }
+                            }
+                            
+                            foreach (Posts::COLLECTION_VPOST as $_data) 
+                            {
+                                $files[$type_key][$_data] = $_POST[$posttype][$type_key][$_data];
+                            }
+                        }
+                    }
+                    
+                    elseif (is_array($value)) 
+                    {
+                        foreach ($value as $k => $v) 
+                        {
+                            if (!isset($files[$type_key][$k]))
+                            {
+                                $files[$type_key][$k] = array();
+                            }
+
+                            $files[$type_key][$k] = array_merge($files[$type_key][$k],[$key => $v]);
+                        }
+                    }
+                }
+            }
+
+            // echo '<pre style="padding-left: 180px;">';
+            // print_r( __FILE__."  - Line: ".__LINE__." " );
+            // print_r( $files );
+            // echo '</pre>';
+            // echo '<hr>';
+            return $files;
+        }
+
+        /**
+         * Retrieve Requests parameters
+         */
+        private function getParameters(string $method = 'GET', string $key = '')
+        {
+            $data = [];
+
+            switch ($method) 
+            {
+                case 'POST':
+                    $data = $_POST;
+                    break;
+
+                case 'GET':
+                    $data = $_GET;
+                    break;
+
+                case 'FILES':
+                    $data = $_FILES;
+                    break;
+            }
+
+
+            if (isset($data[$key]))
+            {
+                return $data[$key];
+            }
+
+            return $data;
+        }
+
+
         /**
          * ----------------------------------------
          * Method
@@ -82,7 +279,7 @@ if (!class_exists('Kernel\Request'))
         /**
          * Retrieve the post Type
          */
-        public function postType()
+        public function posttype()
         {
             if (isset($_REQUEST['post_type']))
             {
@@ -156,31 +353,12 @@ if (!class_exists('Kernel\Request'))
         }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-
         /**
+         * ----------------------------------------
          * Action
+         * ----------------------------------------
          */
+
         private function setAction()
         {
             if (isset($_GET['action']))
@@ -214,56 +392,6 @@ if (!class_exists('Kernel\Request'))
         public function isActionUpdate()
         {
             return 'update' === $this->getAction();
-        }
-
-        /**
-         * Retrieve parameter
-         */
-        public function get(string $param = '')
-        {
-            return $this->getParameter('GET', $param);
-        }
-        // public function post(string $param = '')
-        // {
-        //     return $this->getParameter('POST', $param);
-        // }
-        private function getParameter(string $method = 'GET', string $param = '')
-        {
-            if ($method === $this->getMethod() && isset($_REQUEST[$param]))
-            {
-                return $_REQUEST[$param];
-            }
-
-            return null;
-        }
-
-        /**
-         * Retrieve request responses
-         */
-        public function responses()
-        {
-            if (isset($_REQUEST[$this->getPostType()]))
-            {
-                return $_REQUEST[$this->getPostType()];
-            }
-            //     foreach ($_REQUEST as $key => $value) 
-            //     {
-            //         if (preg_match("/^".$_REQUEST['post_type']."____(.+)____$/", $key, $m))
-            //         {
-            //             $responses += [$m[1] => $value];
-            //         }
-            //     }
-        }
-
-        /**
-         * Retrieve request files
-         */
-        public function files()
-        {
-            if (isset($_FILES[$this->getPostType()]))
-            {
-                return $_FILES[$this->getPostType()];
-            }
         }
     }
 }

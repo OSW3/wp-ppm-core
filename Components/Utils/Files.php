@@ -109,5 +109,43 @@ if (!class_exists('Components\Utils\Files'))
             json_decode($string);
             return (json_last_error() == JSON_ERROR_NONE);
         }
+
+        /**
+         * File size
+         */
+        public static function bytes(string $size) 
+        {
+            $size = trim($size);
+            $unit = $size[strlen($size)-1];
+            $size = strstr($size, $unit, true);
+            $unit = strtoupper($unit);
+
+            switch($unit) 
+            {
+                case 'T':
+                    $size *= 1024;
+                case 'G':
+                    $size *= 1024;
+                case 'M':
+                    $size *= 1024;
+                case 'K':
+                    $size *= 1024;
+            }
+
+            return $size;
+        }
+        /**
+         * Convert Bytes to KiloBytes, MegaBytes, GigaBytes, TeraBytes
+         */
+        public static function formatBytes(int $size, int $precision = 2)
+        {
+            $units      = array('B', 'K', 'M', 'G', 'T'); 
+            $base       = log($size, 1024);
+            $base_floor = floor($base);
+            $pow        = pow(1024, ($base - $base_floor));
+            $round      = round($pow, $precision);
+
+            return $round.$units[$base_floor];
+        }
     }
 }

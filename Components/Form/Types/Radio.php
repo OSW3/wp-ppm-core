@@ -11,6 +11,7 @@ if (!defined('WPINC'))
 }
 
 use \Components\Form\Types\Text;
+// use \Components\Form\Types\Checkbox;
 
 if (!class_exists('Components\Form\Types\Radio'))
 {
@@ -35,17 +36,20 @@ if (!class_exists('Components\Form\Types\Radio'))
         protected function getAttrValue()
         {
             // Define attribute string
-            $attr = '';
+            $attr = ' value="'.$this->getDefinition('value').'"';
 
-            // Retrieve default value
-            $default = $this->getDefinition('default');
+            $values = $this->getValue();
 
-            // Make sure $defaults is not an array
-            if (!is_array($default))
+            if (!is_array($values)) 
             {
-                if ($this->getDefinition('value') === $default)
+                $values = [$values];
+            }
+
+            foreach ($values as $value) 
+            {
+                if ($this->getDefinition('value') === $value)
                 {
-                    $attr.= ' checked="checked""';
+                    $attr.= ' checked="checked"';
                 }
             }
 

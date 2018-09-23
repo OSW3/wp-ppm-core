@@ -70,6 +70,11 @@ if (!class_exists('Register\Metaboxes'))
         private $request;
 
         /**
+         * Post Schemas definirion
+         */
+        private $schemas;
+
+        /**
          * Supports fields
          */
         private $supports;
@@ -82,10 +87,14 @@ if (!class_exists('Register\Metaboxes'))
             // Request data
             $this->request = new Request;
             
+            // Set the Plugin Namespace
             $this->namespace = $namespace;
 
             // Retrieve the array Post data
             $this->setPost($post);
+
+            // List of defined Post Schema
+            $this->setSchemas();
 
             // Define definition
             $this->setDefinition();
@@ -110,6 +119,12 @@ if (!class_exists('Register\Metaboxes'))
         }
 
         /**
+         * ----------------------------------------
+         * Metabox Definition
+         * ----------------------------------------
+         */
+
+        /**
          * Definition
          */
         private function setDefinition()
@@ -117,9 +132,44 @@ if (!class_exists('Register\Metaboxes'))
             $definition = array();
             $ui = $this->getPost('ui');
 
-            if(isset($ui['pages']['edit']['metaboxes']))
+            if(isset($ui['pages']['edit']['metaboxes']) && is_array($ui['pages']['edit']['metaboxes']))
             {
                 $definition = $ui['pages']['edit']['metaboxes'];
+            }
+
+            foreach ($definition as $key => $item) 
+            {
+                // Define the key
+                $item = $this->setKey($item);
+
+                // Define the context
+                $item = $this->setContext($item);
+
+                // Define the priority
+                $item = $this->setPriority($item);
+
+                // Define the Description
+                $item = $this->setDescription($item);
+
+                // Define if is displayed
+                $item = $this->setDisplay($item);
+
+                // Define the ID
+                $item = $this->setID($item);
+
+                // Define the PostType
+                $item = $this->setPostType($item);
+
+                // Define the title
+                $item = $this->setTitle($item);
+
+                // Define the schema
+                $item = $this->setSchema($item);
+
+                // Define if Metabox has a file field type
+                $item = $this->setEnctype($item);
+
+                $definition[$key] = $item;
             }
 
             $this->definition = $definition;
@@ -142,6 +192,145 @@ if (!class_exists('Register\Metaboxes'))
             {
                 unset($this->definition[$key]);
             }
+        }
+
+        /**
+         * Supports
+         */
+        private function setSupports()
+        {
+            if (!is_array($this->supports))
+            {
+                $this->supports = array();
+            }
+
+            foreach ($this->getDefinition() as $key => $definition) 
+            {
+                if (isset($definition['key']) && in_array($definition['key'], self::SUPPORTS))
+                {
+                    array_push( $this->supports, $definition );
+                    $this->unsetDefinition($key);
+                }
+            }
+
+            return $this;
+        }
+        public function getSupports()
+        {
+            return $this->supports;
+        }
+
+
+        /**
+         * ----------------------------------------
+         * Metabox Definition
+         * ----------------------------------------
+         */
+
+        /**
+         * Context
+         */
+        private function setContext(array $item)
+        {
+            $context = "normal";
+
+            if (isset($item['context']) && in_array($item['context'], self::CONTEXT))
+            {
+                $context = $item['context'];
+            }
+
+            $item['context'] = $context;
+
+            return $item;
+        }
+
+        /**
+         * Display
+         */
+        private function setDisplay(array $item)
+        {
+            $display = true;
+
+            if (isset($item['display']) && is_bool($item['display']))
+            {
+                $display = $item['display'];
+            }
+
+            $item['display'] = $display;
+
+            return $item;
+        }
+
+        /**
+         * Description
+         */
+        private function setDescription(array $item)
+        {
+            $description = null;
+
+            if (isset($item['description']))
+            {
+                $description = $item['description'];
+            }
+
+            $item['description'] = $description;
+
+            return $item;
+        }
+
+        /**
+         * 
+         */
+        private function setEnctype(array $item)
+        {
+            $enctype = false;
+
+            $schemas = $this->getSchemas();
+
+            foreach ($item['schema'] as $key => $name) 
+            {
+                if (isset($schemas[$name]) && $schemas[$name]['type'] === 'file')
+                {
+                    $enctype = true;
+                }
+            }
+
+            $item['enctype'] = $enctype;
+
+            return $item;
+        }
+
+        /**
+         * ID
+         */
+        private function setID(array $item)
+        {
+            $id = null;
+
+            if ($item['key'] != null)
+            {
+                $id = 'metabox_'.$this->getPost('type').'_'.$item['key'];
+            }
+            $item['id'] = $id;
+            
+            return $item;
+        }
+
+        /**
+         * Key
+         */
+        private function setKey(array $item)
+        {
+            $key = null;
+
+            if (isset($item['key']))
+            {
+                $key = $item['key'];
+            }
+
+            $item['key'] = $key;
+
+            return $item;
         }
 
         /**
@@ -172,7 +361,7 @@ if (!class_exists('Register\Metaboxes'))
         }
 
         /**
-         * Current Post configuration
+         * Post
          */
         private function setPost(array $post)
         {
@@ -191,139 +380,121 @@ if (!class_exists('Register\Metaboxes'))
         }
 
         /**
-         * Supports
+         * Post Type
          */
-        private function setSupports()
+        private function setPostType(array $item)
         {
-            if (!is_array($this->supports))
-            {
-                $this->supports = array();
-            }
+            $item['posttype'] = $this->getPost('type');
 
-            foreach ($this->getDefinition() as $key => $definition) 
-            {
-                if (isset($definition['key']) && in_array($definition['key'], self::SUPPORTS))
-                {
-                    array_push( $this->supports, $definition );
-                    $this->unsetDefinition($key);
-                }
-            }
-
-            return $this;
-        }
-        public function getSupports()
-        {
-            return $this->supports;
-        }
-
-
-
-        /**
-         * Generate Metabox ID
-         * 
-         * @param array $metabox
-         */
-        private function getID(array $metabox)
-        {
-            return 'metabox_'.$this->getPost('type').'_'.$metabox['key'];
+            return $item;
         }
 
         /**
-         * Get the metabox title
-         * 
-         * @param array $metabox
+         * Priority
          */
-        private function getTitle(array $metabox)
-        {
-            $title = self::DEFAULT_TITLE;
-
-            if (isset($metabox['title'])) 
-            {
-                $title = $metabox['title'];
-            }
-
-            return $title;
-        }
-
-        /**
-         * Get the metabox Context
-         * 
-         * @param array $metabox
-         */
-        private function getContext(array $metabox)
-        {
-            $context = "normal";
-
-            if (isset($metabox['context']) && in_array($metabox['context'], self::CONTEXT))
-            {
-                $context = $metabox['context'];
-            }
-
-            return $context;
-        }
-
-        /**
-         * Get the metabox Priority
-         * 
-         * @param array $metabox
-         */
-        private function getPriority(array $metabox)
+        private function setPriority(array $item)
         {
             $priority = "high";
 
-            if (isset($metabox['priority']) && !in_array($metabox['priority'], self::PRIORITY))
+            if (isset($item['priority']) && in_array($item['priority'], self::PRIORITY))
             {
-                $priority = $metabox['priority'];
+                $priority = $item['priority'];
             }
 
-            return $priority;
+            $item['priority'] = $priority;
+
+            return $item;
+        }
+
+        /**
+         * Title
+         */
+        private function setTitle(array $item)
+        {
+            $title = self::DEFAULT_TITLE;
+
+            if (isset($item['title']))
+            {
+                $title = $item['title'];
+            }
+
+            $item['title'] = $title;
+
+            return $item;
+        }
+
+        /**
+         * Schema
+         */
+        private function setSchema(array $item)
+        {
+            $schema = [];
+
+            if (isset($item['schema']))
+            {
+                if (!is_array($item['schema']))
+                {
+                    $item['schema'] = [$item['schema']];
+                }
+
+                $schema = $item['schema'];
+            }
+
+            $schemas = $this->getSchemas();
+
+            foreach ($schema as $key => $name) 
+            {
+                if (!isset($schemas[$name]))
+                {
+                    unset($schema[$key]);
+                }
+            }
+
+            $item['schema'] = $schema;
+
+            return $item;
+        }
+        private function setSchemas()
+        {
+            $schemas = [];
+
+            foreach ($this->getPost('schema') as $type) 
+            {
+                $schemas[$type['key']] = $type;
+            }
+
+            $this->schemas = $schemas;
+
+            return $this;
+        }
+        private function getSchemas()
+        {
+            return $this->schemas;
         }
 
 
+        /**
+         * ----------------------------------------
+         * Form is? / has?
+         * ----------------------------------------
+         */
 
         /**
-         * Has Enctype
+         * Is Metabox Sortable
          * 
-         * @return boolean
+         * @param array $metabox
          */
-        public function hasEnctype()
+        private function isSortable()
         {
-            // Default Enctype
-            $enctype = false;
+            // Default Sortable
+            $sortable = true;
 
-            // Array of valid fields
-            $schema_fields = array();
-
-            foreach ($this->getDefinition() as $metabox) 
+            if (is_bool($this->getOptions('sortable')))
             {
-                if (
-                    isset($metabox['key']) && 
-                    isset($metabox['display']) && is_bool($metabox['display']) && $metabox['display'] == true &&
-                    isset($metabox['schema']) && is_array($metabox['schema'])
-                ) 
-                {
-                    foreach ($metabox['schema'] as $field) 
-                    {
-                        array_push($schema_fields, $field);
-                    }
-                }
+                $sortable = $this->getOptions('sortable');
             }
 
-            // Check field settings
-            $post_schema = $this->getPost('schema');
-            foreach ($post_schema as $field) 
-            {
-                if (
-                    isset($field['key']) && 
-                    in_array ($field['key'], $schema_fields) &&
-                    isset($field['type']) && $field['type'] == 'file'
-                )
-                {
-                    $enctype = true;
-                }
-            }
-
-            return $enctype;
+            return $sortable;
         }
 
         /**
@@ -348,21 +519,24 @@ if (!class_exists('Register\Metaboxes'))
         }
 
         /**
-         * Is Metabox Sortable
+         * Has Enctype
          * 
-         * @param array $metabox
+         * @return boolean
          */
-        private function isSortable()
+        public function hasEnctype()
         {
-            // Default Sortable
-            $sortable = true;
+            // Default Enctype
+            $enctype = false;
 
-            if (is_bool($this->getOptions('sortable')))
+            foreach ($this->getDefinition() as $item) 
             {
-                $sortable = $this->getOptions('sortable');
+                if (true === $item['enctype'])
+                {
+                    $enctype = true;
+                }
             }
 
-            return $sortable;
+            return $enctype;
         }
 
 
@@ -377,37 +551,24 @@ if (!class_exists('Register\Metaboxes'))
          */
         public function add_meta_boxes()
         {
-            foreach ($this->getDefinition() as $metabox) 
+            foreach ($this->getDefinition() as $item) 
             {
-                // Default display
-                $display = true;
-
-                $metabox['post_type'] = $this->getPost('type');
-
-                // Define the display
-                if (isset($metabox['key']) && isset($metabox['display']) && is_bool($metabox['display'])) 
+                if (!empty($item['id']) && !empty($item['key']) && $item['display'] === true)
                 {
-                    $display = $metabox['display'];
-                }
-
-                if ($display)
-                {
-                    $metabox['id'] = $this->getID($metabox);
-                    
-                    if (self::DEFAULT_TITLE == $this->getTitle($metabox))
+                    if (self::DEFAULT_TITLE == $item['title'])
                     {
-                        Misc::injection("<style>#".$metabox['id']." .hndle {display: none;}</style>", "head", "admin");
+                        Misc::injection("<style>#".$item['id']." .hndle {display: none;}</style>", "head", "admin");
                     }
 
                     // Add metabox to the register
                     add_meta_box( 
-                        $metabox['id'], 
-                        $this->getTitle($metabox), 
-                        [$this, 'set_meta_box_content'], 
-                        $this->getPost('type'), 
-                        $this->getContext($metabox), 
-                        $this->getPriority($metabox), 
-                        $metabox
+                        $item['id'],
+                        $item['title'],
+                        [$this, 'set_meta_box_content'],
+                        $item['posttype'],
+                        $item['context'],
+                        $item['priority'],
+                        $item
                     );
                 }
             }
@@ -463,6 +624,10 @@ if (!class_exists('Register\Metaboxes'))
             // Retrieve the Metabox data
             $metabox = $args['args'];
 
+            // retrieve the Defined Post Schema
+            $schemas = $this->getSchemas();
+
+            // -- Print  Metabox Description
             if (isset($metabox['description']))
             {
                 $content.= '<div class="metabox-header">';
@@ -470,28 +635,26 @@ if (!class_exists('Register\Metaboxes'))
                 $content.= '</div>';
             }
 
+            // -- Print Metabox Fields
             $content.= '<table class="form-table">';
             $content.= '<tbody>';
-
-            foreach ($metabox['schema'] as $key) 
+            foreach ($metabox['schema'] as $name) 
             {
-                foreach ($this->getPost('schema') as $type) 
+                if (isset($schemas[$name]))
                 {
-                    if ($type['key'] === $key && in_array($type['type'], Types::ALLOWED))
-                    {
-                        $type['_posttype'] = $metabox['post_type'];
-                        $type['_namespace'] = $this->namespace;
-    
-                        $classname = Strings::ucfirst($type['type']);
-                        $classname = Types::BASE.$classname;
-                        
-                        $type = new $classname($type, 'metabox');
-                        $content.= $type->render();
-                        continue;
-                    }
+                    $type = $schemas[$name];
+
+                    $type['_posttype'] = $metabox['posttype'];
+                    $type['_namespace'] = $this->namespace;
+
+                    $classname = Strings::ucfirst($type['type']);
+                    $classname = Types::BASE.$classname;
+                    
+                    $type = new $classname($type, 'metabox');
+                    $content.= $type->render();
+                    continue;
                 }
             }
-
             $content.= '</tbody>';
             $content.= '</table>';
 

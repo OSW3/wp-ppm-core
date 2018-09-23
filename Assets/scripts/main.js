@@ -32,7 +32,7 @@
 
             items: undefined,
 
-            min: $(this).data('min'),
+            min: $(this).data('init') || 1,
 
             // Collection Stats
             stats: {
@@ -101,7 +101,7 @@
     function ppmCollection_refreshSerial( collection ) {
 
         var items = collection.container.find('[data-role=item]');
-        
+
         collection.container.find('[data-role=alert]').toggleClass('hidden', (items.length > 0));
 
         $.each(items, function(key, item){
@@ -133,16 +133,21 @@
 
     $('output').each(function(){
 
-        var inputs = $(this).attr('for').split(' ');
-        var output = $(this);
+        var attrFor = $(this).attr('for');
 
-        outputCalculation(inputs, output);
-        
-        $.each(inputs, function(index, element) {
-            $('#'+element).on('change', function() {
-                outputCalculation(inputs, output);
+        if (attrFor != undefined)
+        {
+            var inputs = attrFor.split(' ');
+            var output = $(this);
+    
+            outputCalculation(inputs, output);
+            
+            $.each(inputs, function(index, element) {
+                $('#'+element).on('change', function() {
+                    outputCalculation(inputs, output);
+                });
             });
-        });
+        }
     });
 
     function outputCalculation(inputs, output) 

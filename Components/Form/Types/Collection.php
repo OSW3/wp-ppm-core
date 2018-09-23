@@ -42,8 +42,8 @@ if (!class_exists('Components\Form\Types\Collection'))
                 class="ppm-collection" 
                 data-ppm-collection="'.$this->getId().'" 
                 data-role="collection" 
+                data-init="'.$this->getInitLoop().'"
                 >';
-                // data-min="'.$this->getLoop().'">';
 
             // Collection container
             $tag.= $this->container();
@@ -66,12 +66,9 @@ if (!class_exists('Components\Form\Types\Collection'))
         {
             $this->setType('collection');
             $this->setSchema();
-            // $this->setLoop();
+            $this->setInitLoop();
             $this->setItems();
         }
-
-
-        
 
         /**
          * Items
@@ -347,19 +344,20 @@ if (!class_exists('Components\Form\Types\Collection'))
         public function render()
         {
             $output = '';
+
+            $attrColspan = ' colspan="2"';
             
             if (null != $this->tagHelper())
             {
                 $output.= '<tr>';
-                $output.= '<td class="ppm-collection-row ppm-collection-row-header">';
-                // $output.= $this->tagLabel();
+                $output.= '<td'.$attrColspan.' class="ppm-collection-row ppm-collection-row-header">';
                 $output.= $this->tagHelper();
                 $output.= '</td>';
                 $output.= '</tr>';
             }
             
             $output.= '<tr>';
-            $output.= '<td class="ppm-collection-row">';
+            $output.= '<td'.$attrColspan.' class="ppm-collection-row">';
             $output.= $this->tagRender();
             $output.= '</td>';
             $output.= '</tr>';

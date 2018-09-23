@@ -24,7 +24,7 @@ if (!class_exists('Components\Form\Types\Checkbox'))
         /**
          * Override defaults parameters
          */
-        public function builder()
+        protected function builder()
         {
             $this->setType('checkbox');
         }
@@ -37,18 +37,16 @@ if (!class_exists('Components\Form\Types\Checkbox'))
             // Define attribute string
             $attr = '';
 
-            // Retrieve default value
-            $defaults = $this->getDefinition('default');
+            $values = $this->getValue();
 
-            // Make sure $defaults is array (array needed for multiple)
-            if (!is_array($defaults))
+            if (!is_array($values)) 
             {
-                $defaults = [$defaults];
+                $values = [$values];
             }
 
-            foreach ($defaults as $default) 
+            foreach ($values as $value) 
             {
-                if ($this->getDefinition('value') === $default || 'on' === strtolower($this->getDefinition('value')))
+                if ($this->getDefinition('value') === $value)
                 {
                     $attr.= ' checked="checked"';
                 }

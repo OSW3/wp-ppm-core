@@ -68,6 +68,13 @@ if (!class_exists('Kernel\Session'))
             }
         }
 
+
+        /**
+         * ----------------------------------------
+         * Write and Read
+         * ----------------------------------------
+         */
+
         /**
          * Add data to the plugin session
          */
@@ -110,7 +117,15 @@ if (!class_exists('Kernel\Session'))
                     $_SESSION[$this->getNamespace()][$index] = array();
                 }
 
-                $_SESSION[$this->getNamespace()][$index][$key] = $data;
+                if (!isset($_SESSION[$this->getNamespace()][$index][$key]))
+                {
+                    $_SESSION[$this->getNamespace()][$index][$key] = array();
+                }
+
+                $_SESSION[$this->getNamespace()][$index][$key] = array_merge(
+                    $_SESSION[$this->getNamespace()][$index][$key],
+                    $data
+                );
             }
         }
 
@@ -156,6 +171,96 @@ if (!class_exists('Kernel\Session'))
         {
             return $this->namespace;
         }
+
+        /**
+         * ----------------------------------------
+         * Responses / Errors / Shortcodes
+         * ----------------------------------------
+         */
+
+        /**
+         * Responses
+         */
+        public function addResponses(string $posttype, array $responses)
+        {
+            $this->pushAssoc(
+                'responses', 
+                $posttype,
+                $responses
+            );
+        }
+        public function readResponses(string $posttype)
+        {
+            if ($responses = $this->read([ 'responses', $posttype ]))
+            {
+                return $responses;
+            }
+
+            return array();
+        }
+
+        /**
+         * Errors
+         */
+        public function addErrors(string $posttype, array $errors)
+        {
+            $this->pushAssoc(
+                'errors', 
+                $posttype,
+                $errors
+            );
+        }
+        public function readErrors(string $posttype)
+        {
+            if ($responses = $this->read([ 'errors', $posttype ]))
+            {
+                return $responses;
+            }
+
+            return array();
+        }
+
+        /**
+         * Shortcodes
+         */
+        public function addShortcode(string $posttype, array $type)
+        {
+            $this->pushAssoc(
+                'shortcodes', 
+                $posttype,
+                [$type['key'] => $type]
+            );
+        }
+        public function readShortcode($dimensions)
+        {
+            if (!is_array($dimensions))
+            {
+                $dimensions = [$dimensions];
+            }
+
+            return $this->read(array_merge(['shortcodes'], $dimensions));
+        }
+
+        /**
+         * Getter / Setter for Post Responses
+         */
+        // public function responses(string $posttype, $data = null)
+        // {
+        //     if (null != $data) {
+        //         // $this->set_post_data('responses', $posttype, $data);
+        //         $this->pushAssoc('posts', $posttype, ['responses' => $data]);
+        //     }
+        //     else {
+        //         return $this->get_post_data('responses', $posttype);
+        //     }
+        // }
+
+
+        /**
+         * ----------------------------------------
+         * Flashbag messages
+         * ----------------------------------------
+         */
 
 
 
@@ -224,32 +329,32 @@ if (!class_exists('Kernel\Session'))
         //     }
         // }
 
-        // /**
-        //  * Setter for Post data
-        //  */
+        /**
+         * Setter for Post data
+         */
         // private function set_post_data(string $type, string $posttype, $data)
         // {
         //     // Retrieve the plugin Namespace
         //     $namespace = $this->getNamespace();
 
         //     // Plugin Session
-            // if (!isset($_SESSION[$namespace]))
+        //     if (!isset($_SESSION[$namespace]))
         //     {
         //         $_SESSION[$namespace] = array();
         //     }
 
         //     // Plugins Posts
-            // if (!isset($_SESSION[$namespace]['posts']))
+        //     if (!isset($_SESSION[$namespace]['posts']))
         //     {
         //         $_SESSION[$namespace]['posts'] = array();
         //     }
-            // if (!isset($_SESSION[$namespace]['posts'][$posttype]))
+        //     if (!isset($_SESSION[$namespace]['posts'][$posttype]))
         //     {
         //         $_SESSION[$namespace]['posts'][$posttype] = array();
         //     }
 
         //     // Posts Responses
-            // if (!isset($_SESSION[$namespace]['posts'][$posttype][$type]))
+        //     if (!isset($_SESSION[$namespace]['posts'][$posttype][$type]))
         //     {
         //         $_SESSION[$namespace]['posts'][$posttype][$type] = array();
         //     }

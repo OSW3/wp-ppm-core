@@ -22,6 +22,16 @@ if (!class_exists('Components\Form\Types\Captcha'))
         const ATTRIBUTES = [];
 
         /**
+         * EndPoints of services
+         */
+        const ENDPOINTS = [
+            'recaptcha' => [
+                'api' => 'https://www.google.com/recaptcha/api.js',
+                'siteverify' => 'https://www.google.com/recaptcha/api/siteverify'
+            ]
+        ];
+
+        /**
          * Define Captcha Key
          */
         private $captchaKey;
@@ -119,17 +129,19 @@ if (!class_exists('Components\Form\Types\Captcha'))
          */
         public function google_reCaptcha()
         {
-            $api = 'https://www.google.com/recaptcha/api.js';
+            // $api = 'https://www.google.com/recaptcha/api.js';
 
             // Google Script Injection
             if (is_admin())
             {
-                add_action('admin_head', function() use ($api) { echo '<script src="'.$api.'"></script>'; });
+                // add_action('admin_head', function() use ($api) { echo '<script src="'.$api.'"></script>'; });
+                add_action('admin_head', function() { echo '<script src="'.self::ENDPOINTS['recaptcha']['api'].'"></script>'; });
                 do_action('admin_head');
             }
             else
             {
-                wp_enqueue_script('g-recaptcha', $api);
+                // wp_enqueue_script('g-recaptcha', $api);
+                wp_enqueue_script('g-recaptcha', self::ENDPOINTS['recaptcha']['api']);
             }
             
             // Set tag

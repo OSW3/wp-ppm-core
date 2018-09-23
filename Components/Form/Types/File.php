@@ -43,6 +43,14 @@ if (!class_exists('Components\Form\Types\File'))
         }
 
         /**
+         * Override GetName
+         */
+        protected function getName()
+        {
+            return parent::getName() . ($this->getMultiple() ? '[]' : null);
+        }
+
+        /**
          * Define pattern for Has Preview
          */
         private function previewPattern()

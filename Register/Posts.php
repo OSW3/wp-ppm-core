@@ -1,7 +1,5 @@
 <?php
 
-// TODO : Gestion des effet si PostType : 'post' ou 'page'
-
 namespace Register;
 
 // Make sure we don't expose any info if called directly
@@ -12,8 +10,10 @@ if (!defined('WPINC'))
 	exit;
 }
 
+use \Components\Form\Response;
 use \Components\Form\Types;
-use \Components\Form\Types\Password;
+// use \Components\Form\Types\Password;
+use \Components\Notices\Notices;
 use \Components\Utils\Arrays;
 use \Components\Utils\Misc;
 use \Components\Utils\Strings;
@@ -21,6 +21,7 @@ use \Kernel\Request;
 use \Kernel\Session;
 use \Register\Assets;
 use \Register\Categories;
+use \Register\Medias;
 use \Register\Tags;
 
 if (!class_exists('Register\Posts'))
@@ -31,6 +32,11 @@ if (!class_exists('Register\Posts'))
          * Capapility Types
          */
         const CAPABILITY_TYPE = ['post', 'page'];
+
+        /**
+         * Additional data for colletion type
+         */
+        const COLLECTION_VPOST = ['_PARENT', '_VPOST', '_VPOST_ID'];
 
         /**
          * Default supports
@@ -87,6 +93,13 @@ if (!class_exists('Register\Posts'))
         private $posts;
 
         /**
+         * Response data
+         * 
+         * @param object Instance of Response
+         */
+        private $response;
+
+        /**
          * Session data
          * 
          * @param object Instance of Session
@@ -99,14 +112,6 @@ if (!class_exists('Register\Posts'))
          * @param array
          */
         private $types;
-
-
-        // /**
-        //  * Responses data
-        //  * 
-        //  * @param array
-        //  */
-        // private $responses = array();
 
         /**
          * Constructor
@@ -133,7 +138,7 @@ if (!class_exists('Register\Posts'))
             $this->setTypes();
 
             // Load Posts
-            foreach ($this->getPosts() as $post) 
+            foreach ($this->getPosts() as $key => $post) 
             {
                 // Set current Post in loop
                 $this->setPost($post);
@@ -214,7 +219,6 @@ if (!class_exists('Register\Posts'))
 
                 // Add Metaboxes (and supports)
                 $metaboxes = new Metaboxes($post, $this->kernel->getPlugin()->getConfig('namespace'));
-                // $metaboxes = new Metaboxes($post);
                 $supports = $metaboxes->getSupports();
 
                 // Define Supports
@@ -229,15 +233,15 @@ if (!class_exists('Register\Posts'))
                 // TODO : '_builtin'
                 // (bool) FOR INTERNAL USE ONLY! True if this post type is a native or "built-in" post_type. Default false.
 
-                // Internationalize the post data
-                // $post = $this->i18n($post);
+                // Update the Post Definition
+                $this->updatePost($key, $post);
 
                 // Add the custom post to the register
                 register_post_type( $post['type'], $post );
 
                 // Create shortcodes
                 $this->setShortcodes($post);
-                
+
                 if ($this->request->post('type') == $post['type'])
                 {
             //         // -- Posts list
@@ -253,13 +257,13 @@ if (!class_exists('Register\Posts'))
                     add_filter('post_row_actions', function($actions) use ($post) { return $this->post_row_actions($actions, $post); }, 10, 1);
     
 
-            //         // -- Posts Edit
+                    // -- Posts Edit
 
-            //         // Post submission
-            //         add_action('pre_post_update', array($this, "pre_post_update"));
+                    // Post submission
+                    add_action('pre_post_update', [$this, "pre_post_update"]);
     
-            //         // Notice (flashbag)
-            //         add_action('admin_notices', array(new Notices($this->bs->getNamespace()), "get"));
+                    // Notice (flashbag)
+                    add_action('admin_notices', array(new Notices($this->kernel->getPlugin()->getConfig('namespace')), "get"));
     
             //         // Clear the post session
             //         add_action('clear_post_session', function() use ($post) { $this->clear_post_session($post); });
@@ -359,6 +363,15 @@ if (!class_exists('Register\Posts'))
             if ($this->isValidPostType($post) && !$this->postExists($post['type']))
             {
                 array_push($this->posts, $post);
+            }
+
+            return $this;
+        }
+        private function updatePost(int $key, array $post)
+        {
+            if (isset($this->posts[$key]))
+            {
+                $this->posts[$key] = $post;
             }
 
             return $this;
@@ -465,103 +478,15 @@ if (!class_exists('Register\Posts'))
                 $this->types[$post['type']] = array();
             }
 
-            if ($this->isValidType($type))
+            if (self::isValidType($type))
             {
                 // Add Type to $this->types register
                 $this->types[$post['type']] += [
-                    $type['key'] => $this->formatType($type)
+                    $type['key'] => Types::Default($type)
                 ];
             }
 
             return $this;
-        }
-        private function formatType(array $type)
-        {
-            // Define Types default values
-            $type['value']                  = null;
-            $type['type']                   = isset($type['type'])                      ? $type['type']                     : "text";
-            $type['key']                    = isset($type['key'])                       ? $type['key']                      : null;
-            $type['label']                  = isset($type['label'])                     ? $type['label']                    : null;
-            $type['default']                = isset($type['default'])                   ? $type['default']                  : null;
-            $type['helper']                 = isset($type['helper'])                    ? $type['helper']                   : null;
-            $type['rules']['pattern']       = isset($type['rules']['pattern'])          ? $type['rules']['pattern']         : null;
-            $type['rules']['size']          = isset($type['rules']['size'])             ? $type['rules']['size']            : null;
-            $type['rules']['allowed_types'] = isset($type['rules']['allowed_types'])    ? $type['rules']['allowed_types']   : null;
-            $type['attr']['id']             = isset($type['attr']['id'])                ? $type['attr']['id']               : null;
-            $type['attr']['placeholder']    = isset($type['attr']['placeholder'])       ? $type['attr']['placeholder']      : null;
-            $type['attr']['class']          = isset($type['attr']['class'])             ? $type['attr']['class']            : null;
-            $type['attr']['maxlength']      = isset($type['attr']['maxlength'])         ? $type['attr']['maxlength']        : null;
-            $type['attr']['max']            = isset($type['attr']['max'])               ? $type['attr']['max']              : null;
-            $type['attr']['min']            = isset($type['attr']['min'])               ? $type['attr']['min']              : null;
-            $type['attr']['step']           = isset($type['attr']['step'])              ? $type['attr']['step']             : null;
-            $type['attr']['width']          = isset($type['attr']['width'])             ? $type['attr']['width']            : null;
-            $type['attr']['cols']           = isset($type['attr']['cols'])              ? $type['attr']['cols']             : null;
-            $type['attr']['rows']           = isset($type['attr']['rows'])              ? $type['attr']['rows']             : null;
-            $type['attr']['required']       = isset($type['attr']['required'])          ? $type['attr']['required']         : false;
-            $type['attr']['readonly']       = isset($type['attr']['readonly'])          ? $type['attr']['readonly']         : false;
-            $type['attr']['disabled']       = isset($type['attr']['disabled'])          ? $type['attr']['disabled']         : false;
-            $type['attr']['multiple']       = isset($type['attr']['multiple'])          ? $type['attr']['multiple']         : false;
-            $type['expanded']               = isset($type['expanded'])                  ? $type['expanded']                 : false;
-            $type['shortcode']              = isset($type['shortcode'])                 ? $type['shortcode']                : false;
-            $type['preview']                = isset($type['preview'])                   ? $type['preview']                  : true;
-            $type['choices']                = isset($type['choices'])                   ? $type['choices']                  : [];
-            $type['messages']               = isset($type['messages'])                  ? $type['messages']                 : [];
-            $type['algo']                   = isset($type['algo'])                      ? $type['algo']                     : [];
-
-            // Type default error messages
-            $type['messages']['required']   = isset($type['messages']['required'])      ? $type['messages']['required']     : "This field is required.";
-            $type['messages']['email']      = isset($type['messages']['email'])         ? $type['messages']['email']        : "This field is not a valid email.";
-            $type['messages']['url']        = isset($type['messages']['url'])           ? $type['messages']['url']          : "This field is not a valid url.";
-            $type['messages']['time']       = isset($type['messages']['time'])          ? $type['messages']['time']         : "This field is not a valid time.";
-            $type['messages']['date']       = isset($type['messages']['date'])          ? $type['messages']['date']         : "This field is not a valid date.";
-            $type['messages']['year']       = isset($type['messages']['year'])          ? $type['messages']['year']         : "This field is not a valid year.";
-            $type['messages']['color']      = isset($type['messages']['color'])         ? $type['messages']['color']        : "This field is not a valid color";
-            $type['messages']['confirm']    = isset($type['messages']['confirm'])       ? $type['messages']['confirm']      : "Password is not confirmed.";
-            $type['messages']['pattern']    = isset($type['messages']['pattern'])       ? $type['messages']['pattern']      : "This field is not valid.";
-            $type['messages']['type']       = isset($type['messages']['type'])          ? $type['messages']['type']         : "This field is not valid.";
-            $type['messages']['min']        = isset($type['messages']['min'])           ? $type['messages']['min']          : "This value must not be less than $1.";
-            $type['messages']['max']        = isset($type['messages']['max'])           ? $type['messages']['max']          : "This value must not be greater than $1.";
-            $type['messages']['maxlength']  = isset($type['messages']['maxlength'])     ? $type['messages']['maxlength']    : "This value is too long.";
-            $type['messages']['size']       = isset($type['messages']['size'])          ? $type['messages']['size']         : "This file size is not valid.";
-            $type['messages']['file_types'] = isset($type['messages']['file_types'])    ? $type['messages']['file_types']   : "This file is not valid.";
-            $type['messages']['captcha']    = isset($type['messages']['captcha'])       ? $type['messages']['captcha']      : "This captcha is not valid.";
-
-            // Default algo for password
-            if ('password' == $type['type']) 
-            {
-                // default $algo
-                $algo = [
-                    'type' => null,
-                    'options' => []
-                ];
-
-                // retrieve algo settings
-                if (!empty($type['algo'])) 
-                {
-                    if (is_array($type['algo'])) 
-                    {
-                        if (isset($type['algo']['type'])) {
-                            $algo['type'] = $type['algo']['type'];
-                            unset($type['algo']['type']);
-                        }
-                        $algo['options'] = $type['algo'];
-                    }
-                    elseif (is_string($type['algo'])) 
-                    {
-                        $algo['type'] = $type['algo'];
-                    }
-                }
-
-                // Is a valid algo
-                if (!in_array($algo['type'], Password::ALGO)) 
-                {
-                    $algo['type'] = "PASSWORD_DEFAULT";
-                }
-
-                $type['algo'] = $algo;
-            }
-
-            return $type;
         }
 
         /**
@@ -645,12 +570,11 @@ if (!class_exists('Register\Posts'))
                             }
                         }
 
-                        foreach (['_PARENT', '_VPOST', '_VPOST_ID'] as $_vkey) 
+                        foreach (self::COLLECTION_VPOST as $_vkey) 
                         {
                             array_push($this->types[$posttype][$collection_name]['schema'], [
                                 'key' => $_vkey,
                                 'type' => 'hidden'
-                                // 'type' => 'text'
                             ]);
                         }
                     }
@@ -767,7 +691,7 @@ if (!class_exists('Register\Posts'))
         /**
          * Check Types
          */
-        public function isValidType(array $type)
+        public static function isValidType(array $type)
         {
             // Default Is Valid (true)
             $isValid = true;
@@ -1208,10 +1132,14 @@ if (!class_exists('Register\Posts'))
          */
         private function setPublic(array $post)
         {
-            if (!isset($post['public']) || !is_bool($post['public']))
+            $public = true;
+
+            if (isset($post['public']) && is_bool($post['public']))
             {
-                $post['public'] = true;
+                $public = $post['public'];
             }
+
+            $post['public'] = $public;
 
             return $post;
         }
@@ -1428,9 +1356,8 @@ if (!class_exists('Register\Posts'))
                     $namespace = $this->kernel->getPlugin()->getConfig('namespace');
 
                     // Add the Type rules to the PHP Session
-                    // $this->session->push($post['type'], $type);
-                    $this->session->pushAssoc($post['type'], $type['key'], $type);
-
+                    $this->session->addShortcode($post['type'], $type);
+                    
                     // The trigger
                     $trigger = implode(':', [
                         $namespace,
@@ -1916,6 +1843,358 @@ if (!class_exists('Register\Posts'))
         }
 
 
+        // -- Post Submission
+
+        /**
+         * Retrieve Post response and Post validation
+         */
+        public function pre_post_update(int $postid)
+        {
+            $request = new Request;
+
+            if ( wp_is_post_revision($postid) || wp_is_post_autosave($postid) || $request->isActionTrash() || $request->isActionUntrash() )
+            {
+                return;
+            }
+
+            // Format the Response
+            $this->response = new Response($this->kernel, $this->getPosts());
+            $this->response->responses();
+
+            if ($this->response->validate())
+            {
+                add_action('save_post', [$this, 'save_post']);
+            }
+            else
+            {
+                $request->redirect( get_edit_post_link($postid, 'redirect') );
+            }
+        }
+
+        /**
+         * Save / Update Post data
+         */
+        public function save_post(int $postid)
+        {
+            // List of virtual Posts
+            $WP_Query_PostType = [];
+
+            // List of responses
+            $responses  = [];
+
+            // responses destination
+            $add        = [];
+            $update     = [];
+            $delete     = [];
+
+            // Nedd to instantiate the uploader
+            $uploader   = [];
+
+
+            /**
+             * Retrieve Posts
+             * 
+             * - Retrieve List of virtual Posts
+             * - Save the Title
+             */
+
+            foreach ($this->getPosts() as $post)
+            {
+                // Retrieve all Posts Type
+                if (isset($post['type']) && isset($post['public']) && !$post['public'])
+                {
+                    array_push($WP_Query_PostType, $post['type']);
+                }
+
+                // Save the Title substited by a postmeta
+                if ($post['type'] == $this->request->posttype())
+                {
+                    $metaboxes = new Metaboxes($post, $this->kernel->getPlugin()->getConfig('namespace'));
+                    $supports = $metaboxes->getSupports();
+                    $replacement = null;
+                    $glue = " ";
+
+                    foreach ($supports as $support)
+                    {
+                        if ('title' == $support['key'] && !$support['display'] && isset($support['replace']))
+                        {
+                            // Redefine the Glue Symbole
+                            if (isset($support['glue']))
+                            {
+                                $glue = $support['glue'];
+                            }
+        
+                            // Define replacement Types and Data
+                            $replacements_types = $support['replace'];
+                            $replacements_data = [];
+
+                            // Make sure replacement types is an array
+                            if (!is_array($replacements_types))
+                            {
+                                $replacements_types = [$replacements_types];
+                            }
+        
+                            // Check if replacement field (schema) exists
+                            foreach ($replacements_types as $replacement_key) 
+                            {
+                                $response = $this->response->getResponses($replacement_key);
+
+                                if ('password' != $response['type'])
+                                {
+                                    array_push($replacements_data, $response['value']);
+                                }
+                            }
+                            $replacement = trim(implode($glue, $replacements_data));                    
+                        }
+                    }
+
+                    // Proceed to the replacement
+                    if (null !== $replacement)
+                    {
+                        global $wpdb;
+                        $wpdb->update( $wpdb->posts, ['post_title' => $replacement],['ID' => $postid]);
+                    }
+                }
+            }
+
+            /**
+             * Retrieve Responses
+             * 
+             * - Retrieve responses from the Request
+             * - Set response to $add, $update or $delete
+             */
+
+            // Retrieve responses from the Request
+            foreach ($this->response->getResponses() as $type) 
+            {
+                // If the Type is a Collection
+                if ('collection' == $type['type'])
+                {
+                    if (isset($type['schema']))
+                    {
+                        $vpost_data = [];
+
+                        foreach ($type['schema'] as $type_key => $schema) 
+                        {
+                            if (is_array($schema['value']))
+                            {
+                                foreach ($schema['value'] as $value_key => $value) 
+                                {
+                                    if (!isset($vpost_data[$value_key]))
+                                    {
+                                        $vpost_data[$value_key] = array();
+                                    }
+
+                                    // echo "<pre style=\"padding-left: 180px;\">";
+                                    // print_r( $schema['key'] );
+                                    // echo "</pre>"; 
+                                    // echo "<hr>"; 
+
+                                    switch ($schema['key'])
+                                    {
+                                        case '_PARENT':
+                                            unset($type['schema'][$type_key]);
+                                            break;
+
+                                        case '_VPOST':
+                                            $vpost_data[$value_key]['posttype'] = $value;
+                                            unset($type['schema'][$type_key]);
+                                            break;
+
+                                        case '_VPOST_ID':
+                                            $vpost_data[$value_key]['postid'] = $value;                                        
+                                            unset($type['schema'][$type_key]);
+                                            break;
+                                    }
+                                }
+                            }
+                        }
+
+                        foreach ($type['schema'] as $schema) 
+                        {
+                            if (is_array($schema['value']))
+                            {
+                                foreach ($schema['value'] as $key => $value) 
+                                {
+                                    // Add to response
+                                    $response = array_merge($vpost_data[$key], [
+                                        'key'       => $schema['key'],
+                                        'type'      => $schema['type'],
+                                        'serial'    => $key,
+                                        'value'     => $value,
+                                    ]);
+                                    array_push($responses, $response);
+
+                                    // Add file to $uploader 
+                                    // if ('file' == $schema['type'] && isset($schema['file']))
+                                    // {
+                                    //     array_push($uploader, array_merge(
+                                    //         $schema['file'][$key],
+                                    //         ['postid' => $vpost_data[$key]['postid']]
+                                    //     ));
+                                    // }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // If the Type is not a Collection... add the response to $response
+                else
+                {
+                    // Add to response
+                    $response = [
+                        'key'       => $type['key'],
+                        'type'      => $type['type'],
+                        'value'     => $type['value'],
+                        'posttype'  => $this->request->posttype(),
+                        'postid'    => $postid,
+                    ];
+                    array_push($responses, $response);
+
+                    // Add file to $uploader 
+                    // if ('file' == $type['type'] && isset($type['file']))
+                    // {
+                    //     array_push($uploader, array_merge(
+                    //         $type['file'], // TODO : /!\ file attr multiple
+                    //         ['postid' => $postid,]
+                    //     ));
+                    // }
+                }
+            }
+
+
+            // Set response to $add, $update or $delete
+            foreach ($responses as $key => $response) 
+            {
+                // -- Responses to add
+                if (empty($response['postid']))
+                {
+                    if (!isset($add[$response['serial']]))
+                    {
+                        $add[$response['serial']] = array();
+                    }
+                    array_push($add[$response['serial']], $response);
+                }
+
+                // -- Responses to update
+                else
+                {
+                    if (!isset($update[$response['postid']]))
+                    {
+                        $update[$response['postid']] = array();
+                    }
+                    array_push($update[$response['postid']], $response);
+                }
+
+
+                // if ('file' == $response['type'])
+                // {
+                //     echo '<pre style="padding-left: 180px;">';
+                //     print_r( $response );
+                //     echo '</pre>';
+                //     echo '<hr>';
+                // }
+            }
+
+            // -- Responses to remove
+
+            // Retrieve old responses
+            $query = new \WP_Query([
+                'wpse_include_parent' => true,
+                'post_parent'         => $postid,
+                'post_type'           => $WP_Query_PostType
+            ]);
+
+            // Build the array $delete
+            foreach ($query->posts as $post) 
+            {
+                array_push($delete, $post->ID);
+            }
+
+            // Sanitize the array $delete
+            foreach ($update as $key => $value) 
+            {
+                if (in_array($key, $delete))
+                {
+                    unset($delete[ array_search($key, $delete) ]);
+                }
+            }
+
+
+            /**
+             * Proceed to Add / Update / Delete
+             * 
+             * - Add 
+             * - Update
+             * - Remove
+             */
+
+            // Add
+            foreach ($add as $post) 
+            {
+                $_posttype = isset($post[0]['posttype']) ? $post[0]['posttype'] : null;
+
+                if (null != $_posttype)
+                {
+                    remove_action('save_post', [$this, 'save_post']);
+
+                    $post_data = [
+                        'post_author' => get_current_user_id(),
+                        'post_status' => get_post_status($postid),
+                        'post_type' => $_posttype,
+                        'post_parent' => $postid
+                    ];
+
+                    $postID = wp_insert_post($post_data, false);
+
+                    if ($postID)
+                    {
+                        foreach ($post as $meta)
+                        {
+                            update_post_meta($postID, $meta['key'], $meta['value']);
+                        }
+                    }
+
+                }
+            }
+
+            // Update
+            foreach ($update as $postID => $postmeta) 
+            {
+                foreach ($postmeta as $meta) 
+                {
+                    update_post_meta($postID, $meta['key'], $meta['value']);
+                }
+            }
+
+            // Delete
+            foreach ($delete as $postID) 
+            {
+                wp_delete_post($postID, true);
+            }
+
+
+// ici
+            // echo '<pre style="padding-left: 180px;">';
+            // print_r( $add );
+            // echo '</pre>';
+
+            // echo '<pre style="padding-left: 180px;">';
+            // print_r( $update );
+            // echo '</pre>';
+
+            /**
+             * Proceed to Upload
+             */
+            // if (!empty($uploader))
+            {
+                $medias = new Medias($this->kernel, $postid);
+                $medias->upload($uploader);
+            }
+        }
+
+
 
 
 
@@ -2048,298 +2327,316 @@ if (!class_exists('Register\Posts'))
 
         // -- Post Submission
 
-        /**
-         * Retrieve Post response and Post validation
-         */
-        public function pre_post_update($_PID)
-        {
-            if (wp_is_post_revision($_PID) || wp_is_post_autosave($_PID) || $this->bs->request()->isActionTrash() || $this->bs->request()->isActionUntrash())
-            {
-                return;
-            }
+        // /**
+        //  * Retrieve Post response and Post validation
+        //  */
+        // public function pre_post_update($postID)
+        // {
+        //     $request = new Request;
 
-            $response = new Response( $this->getPosts());
-            $this->responses = $response->responses();
+        //     if ( wp_is_post_revision($postID) || wp_is_post_autosave($postID) || $request->isActionTrash() || $request->isActionUntrash() )
+        //     {
+        //         return;
+        //     }
+
+        //     // Format the Response
+        //     $response = new Response( $request->responses() );
+
             
-            if ($this->responses->validate())
-            {
-                add_action('save_post', [$this, 'save_post']);
-            }
-            else 
-            {
-                $this->request->redirect( get_edit_post_link($_PID, 'redirect') );
-                // header('Location: '.get_edit_post_link($_PID, 'redirect'));
-                // exit;
-            }
-        }
+        //     echo "<pre style=\"padding-left: 180px;\">";
+        //     // print_r( $_POST );
+        //     print_r( $request->responses() );
+        //     // // print_r( $request->request() );
+        //     echo "</pre>";
+            
+        //     exit;
 
-        /**
-         * Save / Update Post data
-         */
-        public function save_post(int $postid)
-        {
-            $poststypes = [];
-            $responses  = [];
-            $add        = [];
-            $update     = [];
-            $delete     = [];
+        //     // echo "<pre style=\"padding-left: 180px;\">";
+        //     // var_dump( $request->getAction() );
+        //     // echo "</pre>";
 
-            foreach ($this->getPosts() as $post) 
-            {
+        //     // $response = new Response( $this->getPosts());
+        //     // $this->responses = $response->responses();
+            
+        //     // if ($this->responses->validate())
+        //     // {
+        //     //     add_action('save_post', [$this, 'save_post']);
+        //     // }
+        //     // else 
+        //     // {
+        //     //     $request->redirect( get_edit_post_link($postID, 'redirect') );
+        //     //     // header('Location: '.get_edit_post_link($_PID, 'redirect'));
+        //     //     // exit;
+        //     // }
+        // }
 
-                // Retrieve all Posts Type
-                if (isset($post['type']) && isset($post['public']) && !$post['public'])
-                {
-                    array_push($poststypes, $post['type']);
-                }
+        // /**
+        //  * Save / Update Post data
+        //  */
+        // public function save_post(int $postid)
+        // {
+        //     $poststypes = [];
+        //     $responses  = [];
+        //     $add        = [];
+        //     $update     = [];
+        //     $delete     = [];
 
-                // Post Title replacement
-                if ($post['type'] == $this->bs->request()->getPostType())
-                {
-                    $metaboxes = new Metaboxes($this->bs, $post);
-                    $supports = $metaboxes->getSupports();
-                    $glue = " ";
-                    $replacement = null;
+        //     foreach ($this->getPosts() as $post) 
+        //     {
+
+        //         // Retrieve all Posts Type
+        //         if (isset($post['type']) && isset($post['public']) && !$post['public'])
+        //         {
+        //             array_push($poststypes, $post['type']);
+        //         }
+
+        //         // Post Title replacement
+        //         if ($post['type'] == $this->bs->request()->getPostType())
+        //         {
+        //             $metaboxes = new Metaboxes($this->bs, $post);
+        //             $supports = $metaboxes->getSupports();
+        //             $glue = " ";
+        //             $replacement = null;
         
-                    foreach ($supports as $support) 
-                    {
-                        if ('title' == $support['key'] && !$support['display'] && isset($support['replace']))
-                        {
-                            if (isset($support['glue']))
-                            {
-                                $glue = $support['glue'];
-                            }
+        //             foreach ($supports as $support) 
+        //             {
+        //                 if ('title' == $support['key'] && !$support['display'] && isset($support['replace']))
+        //                 {
+        //                     if (isset($support['glue']))
+        //                     {
+        //                         $glue = $support['glue'];
+        //                     }
         
-                            $replacements = $support['replace'];
-                            $replacements_val = [];
+        //                     $replacements = $support['replace'];
+        //                     $replacements_val = [];
         
-                            if (!is_array($replacements))
-                            {
-                                $replacements = [$replacements];
-                            }
+        //                     if (!is_array($replacements))
+        //                     {
+        //                         $replacements = [$replacements];
+        //                     }
         
-                            // Check if replacement field (schema) exists
-                            foreach ($replacements as $replacement_key) 
-                            {
-                                foreach ($this->responses->getMetaTypes() as $item) 
-                                {
-                                    if ($replacement_key == $item['key'] && 'password' != $item['type'])
-                                    {
-                                        array_push($replacements_val, $item['value']);
-                                    }
-                                }
-                            }
+        //                     // Check if replacement field (schema) exists
+        //                     foreach ($replacements as $replacement_key) 
+        //                     {
+        //                         foreach ($this->responses->getMetaTypes() as $item) 
+        //                         {
+        //                             if ($replacement_key == $item['key'] && 'password' != $item['type'])
+        //                             {
+        //                                 array_push($replacements_val, $item['value']);
+        //                             }
+        //                         }
+        //                     }
         
-                            $replacement = trim(implode($glue, $replacements_val));                    
-                        }
-                    }
+        //                     $replacement = trim(implode($glue, $replacements_val));                    
+        //                 }
+        //             }
                     
-                    if (null !== $replacement)
-                    {
-                        global $wpdb;
-                        $wpdb->update( $wpdb->posts, [
-                            'post_title' => $replacement
-                        ],[
-                            'ID' => $postid
-                        ]);
-                    }
-                }
-            }
+        //             if (null !== $replacement)
+        //             {
+        //                 global $wpdb;
+        //                 $wpdb->update( $wpdb->posts, [
+        //                     'post_title' => $replacement
+        //                 ],[
+        //                     'ID' => $postid
+        //                 ]);
+        //             }
+        //         }
+        //     }
 
-            // -- retrieve responses
+        //     // -- retrieve responses
 
-            foreach ($this->responses->getMetaTypes() as $type)
-            {
-                if ('collection' == $type['type'])
-                {
-                    if (isset($type['schema']))
-                    {
-                        $vpost_data = [];
+        //     foreach ($this->responses->getMetaTypes() as $type)
+        //     {
+        //         if ('collection' == $type['type'])
+        //         {
+        //             if (isset($type['schema']))
+        //             {
+        //                 $vpost_data = [];
                         
-                        foreach ($type['schema'] as $type_key => $schema) 
-                        {
-                            if (is_array($schema['value']))
-                            {
-                                foreach ($schema['value'] as $value_key => $value) 
-                                {
-                                    if (!isset($vpost_data[$value_key]))
-                                    {
-                                        $vpost_data[$value_key] = array();
-                                    }
+        //                 foreach ($type['schema'] as $type_key => $schema) 
+        //                 {
+        //                     if (is_array($schema['value']))
+        //                     {
+        //                         foreach ($schema['value'] as $value_key => $value) 
+        //                         {
+        //                             if (!isset($vpost_data[$value_key]))
+        //                             {
+        //                                 $vpost_data[$value_key] = array();
+        //                             }
 
-                                    switch ($schema['key'])
-                                    {
-                                        case '_PARENT':
-                                            unset($type['schema'][$type_key]);
-                                            break;
+        //                             switch ($schema['key'])
+        //                             {
+        //                                 case '_PARENT':
+        //                                     unset($type['schema'][$type_key]);
+        //                                     break;
 
-                                        case '_VPOST':
-                                            $vpost_data[$value_key]['posttype'] = $value;
-                                            unset($type['schema'][$type_key]);
-                                            break;
+        //                                 case '_VPOST':
+        //                                     $vpost_data[$value_key]['posttype'] = $value;
+        //                                     unset($type['schema'][$type_key]);
+        //                                     break;
 
-                                        case '_VPOST_ID':
-                                            $vpost_data[$value_key]['postid'] = $value;                                        
-                                            unset($type['schema'][$type_key]);
-                                            break;
-                                    }
-                                }
-                            }
-                        }
+        //                                 case '_VPOST_ID':
+        //                                     $vpost_data[$value_key]['postid'] = $value;                                        
+        //                                     unset($type['schema'][$type_key]);
+        //                                     break;
+        //                             }
+        //                         }
+        //                     }
+        //                 }
 
-                        foreach ($type['schema'] as $schema) 
-                        {
-                            // echo "<hr>";
-                            // echo "<pre>";
-                            // var_dump( $schema['value'] );
-                            // echo "</pre>";
-                            if (is_array($schema['value']))
-                            {
-                                foreach ($schema['value'] as $key => $value) 
-                                {
-                                    array_push($responses, array_merge($vpost_data[$key], [
-                                        'key' => $schema['key'],
-                                        'serial' => $key,
-                                        'type' => $schema['type'],
-                                        'value' => $value,
-                                    ]));
-                                }
-                            }
-                        }
+        //                 foreach ($type['schema'] as $schema) 
+        //                 {
+        //                     // echo "<hr>";
+        //                     // echo "<pre>";
+        //                     // var_dump( $schema['value'] );
+        //                     // echo "</pre>";
+        //                     if (is_array($schema['value']))
+        //                     {
+        //                         foreach ($schema['value'] as $key => $value) 
+        //                         {
+        //                             array_push($responses, array_merge($vpost_data[$key], [
+        //                                 'key' => $schema['key'],
+        //                                 'serial' => $key,
+        //                                 'type' => $schema['type'],
+        //                                 'value' => $value,
+        //                             ]));
+        //                         }
+        //                     }
+        //                 }
 
-                    }
-                }
+        //             }
+        //         }
 
-                else
-                {
-                    array_push($responses, [
-                        'key' => $type['key'],
-                        'type' => $type['type'],
-                        'value' => $type['value'],
-                        'posttype' => $this->bs->request()->getPostType(),
-                        'postid' => $postid,
-                    ]);
-                }
-            }
+        //         else
+        //         {
+        //             array_push($responses, [
+        //                 'key' => $type['key'],
+        //                 'type' => $type['type'],
+        //                 'value' => $type['value'],
+        //                 'posttype' => $this->bs->request()->getPostType(),
+        //                 'postid' => $postid,
+        //             ]);
+        //         }
+        //     }
 
-            // -- Build Arrays $add, $update, $delete
-
-
-            // echo "<pre>";
-            // print_r( $this->responses->getMetaTypes() );
-            // echo "</pre>";
-
-            // echo "<pre>";
-            // print_r( $responses );
-            // echo "</pre>";
-
-            foreach ($responses as $key => $response) 
-            {
-                // -- Responses to add
-                if (empty($response['postid']))
-                {
-                    if (!isset($add[$response['serial']]))
-                    {
-                        $add[$response['serial']] = array();
-                    }
-                    array_push($add[$response['serial']], $response);
-                }
-
-                // -- Responses to update
-                else
-                {
-                    if (!isset($update[$response['postid']]))
-                    {
-                        $update[$response['postid']] = array();
-                    }
-                    array_push($update[$response['postid']], $response);
-                }
-            }
-
-            // echo "<pre>";
-            // print_r( $update );
-            // echo "</pre>";
-
-            // -- Responses to remove
-
-            // Retrieve old responses
-            $query = new \WP_Query([
-                'wpse_include_parent' => true,
-                'post_parent'         => $postid,
-                'post_type'           => $poststypes
-            ]);
-
-            // Build the array $delete
-            foreach ($query->posts as $post) 
-            {
-                array_push($delete, $post->ID);
-            }
-
-            // Sanitize the array $delete
-            foreach ($update as $key => $value) 
-            {
-                if (in_array($key, $delete))
-                {
-                    unset($delete[ array_search($key, $delete) ]);
-                }
-            }
-
-            // -- Proceed to Add / Update / Delete
+        //     // -- Build Arrays $add, $update, $delete
 
 
-            // Add
-            foreach ($add as $post) 
-            {
-                $_posttype = isset($post[0]['posttype']) ? $post[0]['posttype'] : null;
+        //     // echo "<pre>";
+        //     // print_r( $this->responses->getMetaTypes() );
+        //     // echo "</pre>";
 
-                if (null != $_posttype)
-                {
-                    remove_action('save_post', [$this, 'save_post']);
+        //     // echo "<pre>";
+        //     // print_r( $responses );
+        //     // echo "</pre>";
 
-                    $post_data = [
-                        'post_author' => get_current_user_id(),
-                        'post_status' => get_post_status($postid),
-                        'post_type' => $_posttype,
-                        'post_parent' => $postid
-                    ];
+        //     foreach ($responses as $key => $response) 
+        //     {
+        //         // -- Responses to add
+        //         if (empty($response['postid']))
+        //         {
+        //             if (!isset($add[$response['serial']]))
+        //             {
+        //                 $add[$response['serial']] = array();
+        //             }
+        //             array_push($add[$response['serial']], $response);
+        //         }
 
-                    $postID = wp_insert_post($post_data, false);
+        //         // -- Responses to update
+        //         else
+        //         {
+        //             if (!isset($update[$response['postid']]))
+        //             {
+        //                 $update[$response['postid']] = array();
+        //             }
+        //             array_push($update[$response['postid']], $response);
+        //         }
+        //     }
 
-                    if ($postID)
-                    {
-                        foreach ($post as $meta)
-                        {
-                            update_post_meta($postID, $meta['key'], $meta['value']);
-                        }
-                    }
+        //     // echo "<pre>";
+        //     // print_r( $update );
+        //     // echo "</pre>";
 
-                }
-            }
+        //     // -- Responses to remove
 
-            // echo "<pre>";
-            // print_r( $update );
-            // echo "</pre>";
+        //     // Retrieve old responses
+        //     $query = new \WP_Query([
+        //         'wpse_include_parent' => true,
+        //         'post_parent'         => $postid,
+        //         'post_type'           => $poststypes
+        //     ]);
 
-            // Update
-            foreach ($update as $postID => $postmeta) 
-            {
-                foreach ($postmeta as $meta) 
-                {
-                    // echo "<pre>";
-                    // print_r( [$meta['key'], $meta['value']] );
-                    // echo "</pre>";
-                    update_post_meta($postID, $meta['key'], $meta['value']);
-                }
-            }
+        //     // Build the array $delete
+        //     foreach ($query->posts as $post) 
+        //     {
+        //         array_push($delete, $post->ID);
+        //     }
 
-            // Delete
-            foreach ($delete as $postID) 
-            {
-                wp_delete_post($postID, true);
-            }
+        //     // Sanitize the array $delete
+        //     foreach ($update as $key => $value) 
+        //     {
+        //         if (in_array($key, $delete))
+        //         {
+        //             unset($delete[ array_search($key, $delete) ]);
+        //         }
+        //     }
 
-            // exit;
-        }
+        //     // -- Proceed to Add / Update / Delete
+
+
+        //     // Add
+        //     foreach ($add as $post) 
+        //     {
+        //         $_posttype = isset($post[0]['posttype']) ? $post[0]['posttype'] : null;
+
+        //         if (null != $_posttype)
+        //         {
+        //             remove_action('save_post', [$this, 'save_post']);
+
+        //             $post_data = [
+        //                 'post_author' => get_current_user_id(),
+        //                 'post_status' => get_post_status($postid),
+        //                 'post_type' => $_posttype,
+        //                 'post_parent' => $postid
+        //             ];
+
+        //             $postID = wp_insert_post($post_data, false);
+
+        //             if ($postID)
+        //             {
+        //                 foreach ($post as $meta)
+        //                 {
+        //                     update_post_meta($postID, $meta['key'], $meta['value']);
+        //                 }
+        //             }
+
+        //         }
+        //     }
+
+        //     // echo "<pre>";
+        //     // print_r( $update );
+        //     // echo "</pre>";
+
+        //     // Update
+        //     foreach ($update as $postID => $postmeta) 
+        //     {
+        //         foreach ($postmeta as $meta) 
+        //         {
+        //             // echo "<pre>";
+        //             // print_r( [$meta['key'], $meta['value']] );
+        //             // echo "</pre>";
+        //             update_post_meta($postID, $meta['key'], $meta['value']);
+        //         }
+        //     }
+
+        //     // Delete
+        //     foreach ($delete as $postID) 
+        //     {
+        //         wp_delete_post($postID, true);
+        //     }
+
+        //     // exit;
+        // }
 
 
         /**

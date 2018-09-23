@@ -13,6 +13,7 @@ if (!defined('WPINC'))
 // use \Kernel\Config;
 use \Components\Utils\Misc;
 use \Components\Utils\Strings;
+use \Components\Form\Types\Password;
 use \Kernel\Session;
 
 if (!class_exists('Components\Form\Types'))
@@ -147,6 +148,11 @@ if (!class_exists('Components\Form\Types'))
          * @param string
          */ 
         private $list;
+        
+        /**
+         * Number of loop on collection init
+         */ 
+        private $loop;
         
         /**
          * Attribute Max
@@ -318,11 +324,6 @@ if (!class_exists('Components\Form\Types'))
         // protected $config;
         
         // /**
-        //  * Number of loop on collection init
-        //  */ 
-        // private $loop;
-        
-        // /**
         //  * 
         //  */ 
         // private $selected;
@@ -391,6 +392,96 @@ if (!class_exists('Components\Form\Types'))
             $this->builder();
         }
 
+        public static function Default(array $type)
+        {
+            // Define Types default values
+            $type['value']                  = null;
+            $type['type']                   = isset($type['type'])                      ? $type['type']                     : "text";
+            $type['key']                    = isset($type['key'])                       ? $type['key']                      : null;
+            $type['label']                  = isset($type['label'])                     ? $type['label']                    : null;
+            $type['default']                = isset($type['default'])                   ? $type['default']                  : null;
+            $type['helper']                 = isset($type['helper'])                    ? $type['helper']                   : null;
+            $type['rules']['pattern']       = isset($type['rules']['pattern'])          ? $type['rules']['pattern']         : null;
+            $type['rules']['size']          = isset($type['rules']['size'])             ? $type['rules']['size']            : null;
+            $type['rules']['allowed_types'] = isset($type['rules']['allowed_types'])    ? $type['rules']['allowed_types']   : null;
+            $type['attr']['id']             = isset($type['attr']['id'])                ? $type['attr']['id']               : null;
+            $type['attr']['placeholder']    = isset($type['attr']['placeholder'])       ? $type['attr']['placeholder']      : null;
+            $type['attr']['class']          = isset($type['attr']['class'])             ? $type['attr']['class']            : null;
+            $type['attr']['maxlength']      = isset($type['attr']['maxlength'])         ? $type['attr']['maxlength']        : null;
+            $type['attr']['max']            = isset($type['attr']['max'])               ? $type['attr']['max']              : null;
+            $type['attr']['min']            = isset($type['attr']['min'])               ? $type['attr']['min']              : null;
+            $type['attr']['step']           = isset($type['attr']['step'])              ? $type['attr']['step']             : null;
+            $type['attr']['width']          = isset($type['attr']['width'])             ? $type['attr']['width']            : null;
+            $type['attr']['cols']           = isset($type['attr']['cols'])              ? $type['attr']['cols']             : null;
+            $type['attr']['rows']           = isset($type['attr']['rows'])              ? $type['attr']['rows']             : null;
+            $type['attr']['required']       = isset($type['attr']['required'])          ? $type['attr']['required']         : false;
+            $type['attr']['readonly']       = isset($type['attr']['readonly'])          ? $type['attr']['readonly']         : false;
+            $type['attr']['disabled']       = isset($type['attr']['disabled'])          ? $type['attr']['disabled']         : false;
+            $type['attr']['multiple']       = isset($type['attr']['multiple'])          ? $type['attr']['multiple']         : false;
+            $type['expanded']               = isset($type['expanded'])                  ? $type['expanded']                 : false;
+            $type['shortcode']              = isset($type['shortcode'])                 ? $type['shortcode']                : false;
+            $type['preview']                = isset($type['preview'])                   ? $type['preview']                  : true;
+            $type['choices']                = isset($type['choices'])                   ? $type['choices']                  : [];
+            $type['messages']               = isset($type['messages'])                  ? $type['messages']                 : [];
+            $type['algo']                   = isset($type['algo'])                      ? $type['algo']                     : [];
+            $type['file']                   = isset($type['file'])                      ? $type['file']                     : [];
+
+            // Type default error messages
+            $type['messages']['required']   = isset($type['messages']['required'])      ? $type['messages']['required']     : "This field is required.";
+            $type['messages']['email']      = isset($type['messages']['email'])         ? $type['messages']['email']        : "This field is not a valid email.";
+            $type['messages']['url']        = isset($type['messages']['url'])           ? $type['messages']['url']          : "This field is not a valid url.";
+            $type['messages']['time']       = isset($type['messages']['time'])          ? $type['messages']['time']         : "This field is not a valid time.";
+            $type['messages']['date']       = isset($type['messages']['date'])          ? $type['messages']['date']         : "This field is not a valid date.";
+            $type['messages']['year']       = isset($type['messages']['year'])          ? $type['messages']['year']         : "This field is not a valid year.";
+            $type['messages']['color']      = isset($type['messages']['color'])         ? $type['messages']['color']        : "This field is not a valid color";
+            $type['messages']['confirm']    = isset($type['messages']['confirm'])       ? $type['messages']['confirm']      : "Password is not confirmed.";
+            $type['messages']['pattern']    = isset($type['messages']['pattern'])       ? $type['messages']['pattern']      : "This field is not valid.";
+            $type['messages']['type']       = isset($type['messages']['type'])          ? $type['messages']['type']         : "This field is not valid.";
+            $type['messages']['min']        = isset($type['messages']['min'])           ? $type['messages']['min']          : "This value must not be less than $1.";
+            $type['messages']['max']        = isset($type['messages']['max'])           ? $type['messages']['max']          : "This value must not be greater than $1.";
+            $type['messages']['maxlength']  = isset($type['messages']['maxlength'])     ? $type['messages']['maxlength']    : "This value is too long.";
+            $type['messages']['size']       = isset($type['messages']['size'])          ? $type['messages']['size']         : "This file size is not valid.";
+            $type['messages']['file_types'] = isset($type['messages']['file_types'])    ? $type['messages']['file_types']   : "This file is not valid.";
+            $type['messages']['captcha']    = isset($type['messages']['captcha'])       ? $type['messages']['captcha']      : "This captcha is not valid.";
+
+            // Default algo for password
+            if ('password' == $type['type']) 
+            {
+                // default $algo
+                $algo = [
+                    'type' => null,
+                    'options' => []
+                ];
+
+                // retrieve algo settings
+                if (!empty($type['algo'])) 
+                {
+                    if (is_array($type['algo'])) 
+                    {
+                        if (isset($type['algo']['type'])) {
+                            $algo['type'] = $type['algo']['type'];
+                            unset($type['algo']['type']);
+                        }
+                        $algo['options'] = $type['algo'];
+                    }
+                    elseif (is_string($type['algo'])) 
+                    {
+                        $algo['type'] = $type['algo'];
+                    }
+                }
+
+                // Is a valid algo
+                if (!in_array($algo['type'], Password::ALGO)) 
+                {
+                    $algo['type'] = "PASSWORD_DEFAULT";
+                }
+
+                $type['algo'] = $algo;
+            }
+
+            return $type;
+        }
+
         /**
          * ----------------------------------------
          * Config
@@ -412,18 +503,18 @@ if (!class_exists('Components\Form\Types'))
             // Init the Output
             $output = '';
 
-            switch ($this->renderPattern) 
+            switch ($this->renderPattern)
             {
                 case 'collection':
                 case 'metabox':
                     $output.= '<tr>';
-                    $output.= '<th scope="row">';
-                    $output.= $this->tagLabel();
-                    $output.= '</th>';
-                    $output.= '<td>';
-                    $output.= $this->tagRender();
-                    $output.= $this->tagHelper();
-                    $output.= '</td>';
+                    $output.=   '<th scope="row">';
+                    $output.=       $this->tagLabel();
+                    $output.=   '</th>';
+                    $output.=   '<td>';
+                    $output.=       $this->tagRender();
+                    $output.=       $this->tagHelper();
+                    $output.=   '</td>';
                     $output.= '</tr>';
                     break;
                 
@@ -436,16 +527,10 @@ if (!class_exists('Components\Form\Types'))
                  */
                 default:
                     // if (in_array(Misc::get_called_class_name(get_called_class()), ['checkbox', 'radio']))
-
-            // echo '<pre style="padding-left: 180px;">';
-            // print_r( $this->getType() );
-            // echo '</pre>';
-
-
                     // if (!in_array($this->getType(), ['checkbox', 'radio', 'option']))
-                    {
+                    // {
                         $output.= $this->tagLabel();
-                    }
+                    // }
                     $output.= $this->tagRender();
                     $output.= $this->tagHelper();
                     break;
@@ -767,8 +852,6 @@ if (!class_exists('Components\Form\Types'))
         {
             $definition = $this->getDefinition('choices');
 
-
-
             if (is_array($definition))
             {
                 $choices = array_merge($choices, $definition);
@@ -816,14 +899,15 @@ if (!class_exists('Components\Form\Types'))
             }
 
             // Add class error
-            // $session = new Session($this->getConfig('namespace'));
-            // foreach ($session->errors($this->getConfig('post_type')) as $error) 
-            // {
-            //     if (isset($error['key']) && $error['key'] == $this->getConfig('key')) 
-            //     {
-            //         $this->class.= ' '.self::CLASS_ERROR;
-            //     }
-            // }
+            $errors = $this->getSession()->readErrors($this->getPosttype());
+
+            foreach ($errors as $error) 
+            {
+                if (isset($error['key']) && $error['key'] == $this->getDefinition('key')) 
+                {
+                    $_class.= ' '.self::CLASS_ERROR;
+                }
+            }
 
             // Retrive Class parameters
             $class = $this->getAttr('class');
@@ -833,7 +917,7 @@ if (!class_exists('Components\Form\Types'))
                 $_class.= ' '.$class;
             }
 
-            $this->class = trim($_class);
+            $this->class= trim($_class);
 
             return $this;
         }
@@ -924,7 +1008,8 @@ if (!class_exists('Components\Form\Types'))
         }
         protected function getAttrDirname()
         {
-            return $this->getDirname() ? ' dirname="'.$this->getName().'.dir"' : null;
+            // return $this->getDirname() ? ' dirname="'.$this->getName().'.dir"' : null;
+            return $this->getDirname() ? ' dirname="'.$this->getName().'[dir]"' : null;
         }
 
         /**
@@ -958,15 +1043,16 @@ if (!class_exists('Components\Form\Types'))
             // Default helper
             $this->helper = [];
 
-            // // Retrieve value from session (after submission)
-            // $session = new Session($this->getConfig('namespace'));
-            // foreach ($session->errors($this->getConfig('post_type')) as $error) 
-            // {
-            //     if (isset($error['key']) && $error['key'] == $this->getConfig('key')) 
-            //     {
-            //         array_push($this->helper, ["notice", $error['message']]);
-            //     }
-            // }
+            // Add Helper for error
+            $errors = $this->getSession()->readErrors($this->getPosttype());
+
+            foreach ($errors as $error)
+            {
+                if (isset($error['key']) && $error['key'] == $this->getDefinition('key'))
+                {
+                    array_push($this->helper, ["notice", $error['message']]);
+                }
+            }
 
             // -- Helper defined in config.php
             $helper = $this->getDefinition('helper');
@@ -1032,6 +1118,31 @@ if (!class_exists('Components\Form\Types'))
         protected function getAttrId()
         {
             return $this->getId() ? ' id="'. $this->getId() .'"' : null;
+        }
+
+        /**
+         * Init Loop
+         */
+        protected function setInitLoop($loop = null)
+        {
+            // default loop value
+            $this->loop = 1;
+
+            if (null === $loop)
+            {
+                $loop = $this->getRule('init');
+            }
+
+            if (is_int($loop) && $loop >= 0 ) 
+            {
+                $this->loop = $loop;
+            }
+
+            return $this;
+        }
+        protected function getInitLoop()
+        {
+            return $this->loop;
         }
 
         /**
@@ -1197,8 +1308,18 @@ if (!class_exists('Components\Form\Types'))
         }
         protected function getAttrName()
         {
-            return $this->getName() ? ' name="'. $this->getName() .'"' : null;
+            if ($this->getName())
+            {
+                $name = $this->getName();
 
+                if ($this->getDirname())
+                {
+                    $name.= '[val]';
+                }
+                return ' name="'.$name.'"';
+            }
+
+            return null;
         }
 
         /**
@@ -1480,27 +1601,31 @@ if (!class_exists('Components\Form\Types'))
             // Retrieve value from session (after submission)
             if (null === $value)
             {
-            //     $session = new Session($this->getConfig('namespace'));
-            //     foreach ($session->responses($this->getConfig('post_type')) as $key => $response) 
-            //     {
-            //         if ($key == $this->getConfig('key')) 
-            //         {
-            //             $value = $response;
-            //         }
-            //     }
-            }            
-
+                $responses = $this->getSession()->readResponses($this->getPosttype());
+                foreach ($responses as $key => $response) 
+                {
+                    if ($key == $this->getDefinition('key')) 
+                    {
+                        $value = $response;
+                        break;
+                    }
+                }
+            }
+            
             // Retrieve response in database
             if (null === $value && !empty(get_post()))
             {
                 if (null == $postID)
                     $postID = get_post()->ID;
     
-                $value = get_post_meta($postID, $this->getDefinition('key'), true);
+                if (metadata_exists( 'post', $postID, $this->getDefinition('key') ))
+                {
+                    $value = get_post_meta($postID, $this->getDefinition('key'), true);
+                }
             }
 
             // Retrieve Value from Config
-            if (null == $value) 
+            if (null === $value) 
             {
                 $value = $this->getDefinition('default');
 
@@ -1555,31 +1680,6 @@ if (!class_exists('Components\Form\Types'))
     //      * Options and Attribute Getters / Setters
     //      * ----------------------------------------
     //      */
-
-    //     /**
-    //      * Loop
-    //      */
-    //     protected function setLoop($loop = null)
-    //     {
-    //         // default loop value
-    //         $this->loop = 1;
-
-    //         if (null === $loop)
-    //         {
-    //             $loop = $this->getRule('init');
-    //         }
-
-    //         if (is_int($loop) && $loop >= 0 ) 
-    //         {
-    //             $this->loop = $loop;
-    //         }
-
-    //         return $this;
-    //     }
-    //     protected function getLoop()
-    //     {
-    //         return $this->loop;
-    //     }
 
     //     /**
     //      * Width

@@ -49,7 +49,7 @@ if (!class_exists('Register\Shortcodes'))
             else
             {
                 // Retrieve the Type Setiings
-                $type = $this->getSession()->read( [$posttype, $key] );
+                $type = $this->getSession()->readShortcode( [$posttype, $key] );
 
                 // Check is a valid type
                 if (isset($type['key']) && $type['key'] === $key)

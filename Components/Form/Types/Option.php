@@ -53,12 +53,19 @@ if (!class_exists('Components\Form\Types\Option'))
                 $defaults = [$defaults];
             }
 
-            $attr = parent::getAttrValue();
+            // Selected Values
+            $selected_values = $defaults;
 
-            foreach ($defaults as $default) 
+            if (is_array($this->getValue()))
             {
-                // if ($this->getValue() === $default)
-                if ($this->getDefinition('value') === $default)
+                $selected_values = $this->getValue();
+            }
+
+            $attr = ' value="'.$this->getDefinition('value').'"';
+
+            foreach ($selected_values as $selected) 
+            {
+                if ($this->getDefinition('value') === $selected)
                 {
                     $attr.= ' selected="selected"';
                 }

@@ -109,6 +109,11 @@ if (!class_exists('Components\Form\Types\Choices'))
                         break;
 
                     case 'choices_select':
+
+            // echo '<pre style="padding-left: 180px;">';
+            // print_r( $options );
+            // echo '</pre>';
+
                         $option = new Option($options);
                         $tag.= $option->render();
                         break;
